@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 
@@ -47,7 +48,7 @@ func shortenURLPage(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	io.WriteString(w, id)
+	fmt.Fprintf(w, "http://%s/%s", r.Host, id)
 }
 
 func restoreURLPage(w http.ResponseWriter, r *http.Request) {

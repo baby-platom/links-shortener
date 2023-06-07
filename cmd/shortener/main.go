@@ -4,12 +4,12 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/baby-platom/links-shortener/internal/short_id"
+	"github.com/baby-platom/links-shortener/internal/shortid"
 )
 
-type CustomHandler struct{}
+type customHandler struct{}
 
-var shortenedUrlsById = make(map[string]string)
+var shortenedUrlsByID = make(map[string]string)
 
 func main() {
 	if err := run(); err != nil {
@@ -18,12 +18,12 @@ func main() {
 }
 
 func run() error {
-	var h CustomHandler
+	var h customHandler
 
 	return http.ListenAndServe(`:8080`, h)
 }
 
-func (h CustomHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h customHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		shortenURLPage(w, r)
@@ -42,8 +42,8 @@ func shortenURLPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := short_id.GenerateShortId()
-	shortenedUrlsById[id] = string(body)
+	id := shortid.GenerateShortID()
+	shortenedUrlsByID[id] = string(body)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -52,11 +52,10 @@ func shortenURLPage(w http.ResponseWriter, r *http.Request) {
 
 func restoreURLPage(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[1:]
-	url, ok := shortenedUrlsById[id]
+	url, ok := shortenedUrlsByID[id]
 	if !ok {
 		http.Error(w, "Nonexistent Id", http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Location", url)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }

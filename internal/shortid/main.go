@@ -1,4 +1,4 @@
-package short_id
+package shortid
 
 import (
 	"github.com/teris-io/shortid"
@@ -9,7 +9,8 @@ func init() {
 	shortid.SetDefault(sid)
 }
 
-func GenerateShortId() string {
+// GenerateShortID generates Random Short ID
+func GenerateShortID() string {
 	id, _ := shortid.Generate()
 	return id
 }

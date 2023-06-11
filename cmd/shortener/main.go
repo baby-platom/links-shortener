@@ -27,16 +27,16 @@ func run() error {
 func (h customHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
-		shortenURLPage(w, r)
+		ShortenURLHandler(w, r)
 	case http.MethodGet:
-		restoreURLPage(w, r)
+		RestoreURLHandler(w, r)
 	default:
 		http.Error(w, "Only POST and GET methods are allowed", http.StatusBadRequest)
 		return
 	}
 }
 
-func shortenURLPage(w http.ResponseWriter, r *http.Request) {
+func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -51,7 +51,7 @@ func shortenURLPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "http://%s/%s", r.Host, id)
 }
 
-func restoreURLPage(w http.ResponseWriter, r *http.Request) {
+func RestoreURLHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[1:]
 	url, ok := shortenedUrlsByID[id]
 	if !ok {

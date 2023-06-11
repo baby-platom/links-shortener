@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-var testingUrl = "https://music.yandex.kz/home"
-var shortenedUrl string
+var testingURL = "https://music.yandex.kz/home"
+var shortenedURL string
 
 type header struct {
 	name  string
@@ -40,7 +40,7 @@ func TestShortenURLHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(testingUrl))
+			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(testingURL))
 			w := httptest.NewRecorder()
 			ShortenURLHandler(w, request)
 
@@ -55,7 +55,7 @@ func TestShortenURLHandler(t *testing.T) {
 
 			resBodyString := string(resBody)
 			resBodySlice := strings.Split(resBodyString, "/")
-			shortenedUrl = resBodySlice[len(resBodySlice)-1]
+			shortenedURL = resBodySlice[len(resBodySlice)-1]
 		})
 	}
 }
@@ -69,7 +69,7 @@ func TestRestoreURLHandler(t *testing.T) {
 				headers: []header{
 					{
 						name:  "Location",
-						value: testingUrl,
+						value: testingURL,
 					},
 				},
 			},
@@ -77,8 +77,8 @@ func TestRestoreURLHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			target := fmt.Sprintf("/%s", shortenedUrl)
-			request := httptest.NewRequest(http.MethodGet, target, strings.NewReader(testingUrl))
+			target := fmt.Sprintf("/%s", shortenedURL)
+			request := httptest.NewRequest(http.MethodGet, target, strings.NewReader(testingURL))
 			w := httptest.NewRecorder()
 			RestoreURLHandler(w, request)
 

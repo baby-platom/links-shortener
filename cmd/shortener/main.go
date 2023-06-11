@@ -36,6 +36,7 @@ func (h customHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ShortenURLHandler returns a shortened version of a passed URL
 func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -51,6 +52,7 @@ func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "http://%s/%s", r.Host, id)
 }
 
+// RestoreURLHandler restore a URL if it before was shortened
 func RestoreURLHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[1:]
 	url, ok := shortenedUrlsByID[id]

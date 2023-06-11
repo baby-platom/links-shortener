@@ -43,7 +43,6 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 	require.NoError(t, err)
 
 	respBody, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
 	require.NoError(t, err)
 
 	return resp, string(respBody)
@@ -62,6 +61,7 @@ func TestShortenURLHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			res, resBodyString := testRequest(t, ts, http.MethodPost, "/", strings.NewReader(testingURL))
+			res.Body.Close()
 
 			assert.Equal(t, test.want.code, res.StatusCode)
 			assert.NotEmpty(t, resBodyString)
@@ -92,6 +92,7 @@ func TestRestoreURLHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			target := "/" + shortenedURL
 			res, _ := testRequest(t, ts, http.MethodGet, target, nil)
+			res.Body.Close()
 			ts.Close()
 
 			assert.Equal(t, test.want.code, res.StatusCode)

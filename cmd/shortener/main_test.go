@@ -83,6 +83,7 @@ func TestRestoreURLHandler(t *testing.T) {
 			RestoreURLHandler(w, request)
 
 			res := w.Result()
+			defer res.Body.Close()
 			assert.Equal(t, res.StatusCode, test.want.code)
 
 			for _, header := range test.want.headers {

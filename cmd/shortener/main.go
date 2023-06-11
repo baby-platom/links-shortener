@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/baby-platom/links-shortener/internal/shortid"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type customHandler struct{}
@@ -19,21 +21,17 @@ func main() {
 }
 
 func run() error {
-	var h customHandler
-
-	return http.ListenAndServe(`:8080`, h)
+	return http.ListenAndServe(`:8080`, Router())
 }
 
-func (h customHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		ShortenURLHandler(w, r)
-	case http.MethodGet:
-		RestoreURLHandler(w, r)
-	default:
-		http.Error(w, "Only POST and GET methods are allowed", http.StatusBadRequest)
-		return
-	}
+// Router prepares and returns chi.Router
+func Router() chi.Router {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
+	r.Post("/", ShortenURLHandler)
+	r.Get("/{id}", RestoreURLHandler)
+	return r
 }
 
 // ShortenURLHandler returns a shortened version of a passed URL
@@ -46,6 +44,7 @@ func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := shortid.GenerateShortID()
 	shortenedUrlsByID[id] = string(body)
+	fmt.Printf("test/n%s/n/ntest", string(body))
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -54,7 +53,7 @@ func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 // RestoreURLHandler restore a URL if it before was shortened
 func RestoreURLHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Path[1:]
+	id := chi.URLParam(r, "id")
 	url, ok := shortenedUrlsByID[id]
 	if !ok {
 		http.Error(w, "Nonexistent Id", http.StatusBadRequest)

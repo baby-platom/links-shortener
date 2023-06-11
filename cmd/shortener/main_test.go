@@ -1,18 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	// "fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var testingURL = "https://music.yandex.kz/home"
 var shortenedURL string
+var ts = httptest.NewServer(Router())
 
 type header struct {
 	name  string
@@ -28,6 +30,25 @@ type test struct {
 	want want
 }
 
+func testRequest(t *testing.T, ts *httptest.Server, method,
+	path string, body io.Reader) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, body)
+	require.NoError(t, err)
+
+	client := ts.Client()
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	return resp, string(respBody)
+}
+
 func TestShortenURLHandler(t *testing.T) {
 	tests := []test{
 		{
@@ -40,20 +61,12 @@ func TestShortenURLHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(testingURL))
-			w := httptest.NewRecorder()
-			ShortenURLHandler(w, request)
+			res, resBodyString := testRequest(t, ts, http.MethodPost, "/", strings.NewReader(testingURL))
 
-			res := w.Result()
-			assert.Equal(t, res.StatusCode, test.want.code)
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
+			assert.Equal(t, test.want.code, res.StatusCode)
+			assert.NotEmpty(t, resBodyString)
+			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 
-			require.NoError(t, err)
-			assert.NotEmpty(t, resBody)
-			assert.Equal(t, res.Header.Get("Content-Type"), test.want.contentType)
-
-			resBodyString := string(resBody)
 			resBodySlice := strings.Split(resBodyString, "/")
 			shortenedURL = resBodySlice[len(resBodySlice)-1]
 		})
@@ -77,17 +90,13 @@ func TestRestoreURLHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			target := fmt.Sprintf("/%s", shortenedURL)
-			request := httptest.NewRequest(http.MethodGet, target, strings.NewReader(testingURL))
-			w := httptest.NewRecorder()
-			RestoreURLHandler(w, request)
+			target := "/" + shortenedURL
+			res, _ := testRequest(t, ts, http.MethodGet, target, nil)
+			ts.Close()
 
-			res := w.Result()
-			defer res.Body.Close()
-			assert.Equal(t, res.StatusCode, test.want.code)
-
+			assert.Equal(t, test.want.code, res.StatusCode)
 			for _, header := range test.want.headers {
-				assert.Equal(t, res.Header.Get(header.name), header.value)
+				assert.Equal(t, header.value, res.Header.Get(header.name))
 			}
 		})
 	}

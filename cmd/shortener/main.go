@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/baby-platom/links-shortener/cmd/config"
 	"github.com/baby-platom/links-shortener/internal/shortid"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,13 +16,15 @@ type customHandler struct{}
 var shortenedUrlsByID = make(map[string]string)
 
 func main() {
+	config.ParseFlags()
+
 	if err := run(); err != nil {
 		panic(err)
 	}
 }
 
 func run() error {
-	return http.ListenAndServe(`:8080`, Router())
+	return http.ListenAndServe(config.Config.Address, Router())
 }
 
 // Router prepares and returns chi.Router
@@ -48,7 +51,7 @@ func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "http://%s/%s", r.Host, id)
+	fmt.Fprintf(w, "%s/%s", config.Config.BaseAddress, id)
 }
 
 // RestoreURLHandler restore a URL if it before was shortened

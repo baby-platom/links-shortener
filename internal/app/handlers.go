@@ -31,7 +31,7 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := shortid.GenerateShortID()
 	ShortenedUrlsByID[id] = bodyString
-	fmt.Printf("Shortened '%s' to '%s'", bodyString, id)
+	fmt.Printf("Shortened '%s' to '%s'\n", bodyString, id)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)

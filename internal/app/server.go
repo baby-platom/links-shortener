@@ -3,6 +3,7 @@ package app
 import (
 	"net/http"
 
+	"github.com/baby-platom/links-shortener/internal/compress"
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/go-chi/chi/v5"
@@ -19,7 +20,12 @@ func Run() error {
 	if err := logger.Initialize(config.Config.LogLevel); err != nil {
 		return err
 	}
-	return http.ListenAndServe(config.Config.Address, logger.Middleware(Router()))
+	return http.ListenAndServe(
+		config.Config.Address,
+		logger.Middleware(
+			compress.Middleware(Router()),
+		),
+	)
 }
 
 // Router prepares and returns chi.Router

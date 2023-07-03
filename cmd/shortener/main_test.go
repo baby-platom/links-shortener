@@ -15,6 +15,7 @@ import (
 
 	"github.com/baby-platom/links-shortener/internal/app"
 	"github.com/baby-platom/links-shortener/internal/models"
+	"github.com/baby-platom/links-shortener/internal/shortid"
 )
 
 const defaultContentType = "text/plain"
@@ -124,7 +125,7 @@ func TestShortenURLHandler(t *testing.T) {
 }
 
 func TestRestoreURLHandler(t *testing.T) {
-	shortenedUrlsByID := app.ShortenedUrlsByIDType{
+	shortenedUrlsByID := shortid.ShortenedUrlsByIDType{
 		"some_id": testingURL,
 	}
 	for key, value := range shortenedUrlsByID {

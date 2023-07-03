@@ -6,20 +6,19 @@ import (
 	"github.com/baby-platom/links-shortener/internal/compress"
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/logger"
+	"github.com/baby-platom/links-shortener/internal/shortid"
 	"github.com/go-chi/chi/v5"
 )
 
-// ShortenedUrlsByIDType map id:initalUrl
-type ShortenedUrlsByIDType map[string]string
-
 // ShortenedUrlsByID stores initial urls
-var ShortenedUrlsByID = make(ShortenedUrlsByIDType)
+var ShortenedUrlsByID = make(shortid.ShortenedUrlsByIDType)
 
 // Run server
 func Run() error {
 	if err := logger.Initialize(config.Config.LogLevel); err != nil {
 		return err
 	}
+	ShortenedUrlsByID.Load(config.Config.FileStoragePath)
 	return http.ListenAndServe(
 		config.Config.Address,
 		logger.Middleware(

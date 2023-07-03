@@ -29,6 +29,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := shortid.GenerateShortID()
 	ShortenedUrlsByID[id] = req.URL
+	ShortenedUrlsByID.Save(config.Config.FileStoragePath)
 	logger.Log.Infof("Shortened '%s' to '%s'\n", req.URL, id)
 
 	w.Header().Set("Content-Type", "application/json")

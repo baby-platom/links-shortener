@@ -3,8 +3,6 @@ package compress
 import (
 	"net/http"
 	"strings"
-
-	"github.com/baby-platom/links-shortener/internal/logger"
 )
 
 var contentTypesToBeEncoded = []string{"application/json", "text/html"}
@@ -30,7 +28,6 @@ func Middleware(h http.Handler) http.Handler {
 			contentTypesToBeEncoded,
 		)
 		if supportsGzip && shouldBeEncoded {
-			logger.Log.Info("Encoding content")
 			cw := newCompressWriter(w)
 			ow = cw
 			defer cw.Close()

@@ -8,8 +8,7 @@ import (
 func main() {
 	config.ParseFlags()
 
-	err := app.Run()
-	if err != nil {
+	if err := app.Run(); err != nil {
 		panic(err)
 	}
 }

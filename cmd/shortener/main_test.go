@@ -180,7 +180,7 @@ func TestShortenAPIHandler(t *testing.T) {
 	path := "/api/shorten"
 
 	positiveBody, err := json.Marshal(
-		models.ShortentRequest{
+		models.ShortenRequest{
 			URL: testingURL,
 		},
 	)
@@ -208,7 +208,7 @@ func TestShortenAPIHandler(t *testing.T) {
 				contentType: contentTypeJSON,
 			},
 			want: want{
-				code: http.StatusInternalServerError,
+				code: http.StatusBadRequest,
 			},
 		},
 	}

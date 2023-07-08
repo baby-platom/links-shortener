@@ -21,15 +21,15 @@ func Run() error {
 	ShortenedUrlsByID.Load(config.Config.FileStoragePath)
 	return http.ListenAndServe(
 		config.Config.Address,
-		logger.Middleware(
-			compress.Middleware(Router()),
-		),
+		Router(),
 	)
 }
 
 // Router prepares and returns chi.Router
 func Router() chi.Router {
 	r := chi.NewRouter()
+	r.Use(logger.Middleware)
+	r.Use(compress.Middleware)
 
 	r.Post("/api/shorten", shortenAPIHandler)
 

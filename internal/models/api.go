@@ -1,11 +1,11 @@
 package models
 
-// ShortentRequest - inbound data
-type ShortentRequest struct {
+// ShortenRequest - inbound data
+type ShortenRequest struct {
 	URL string `json:"url"`
 }
 
-// ShortentResponse - outbound data
-type ShortentResponse struct {
+// ShortenResponse - outbound data
+type ShortenResponse struct {
 	Result string `json:"result"`
 }

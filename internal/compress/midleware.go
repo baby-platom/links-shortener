@@ -7,7 +7,7 @@ import (
 
 var contentTypesToBeEncoded = []string{"application/json", "text/html"}
 
-func stringInSlice(a string, list []string) bool {
+func containsString(list []string, a string) bool {
 	for _, b := range list {
 		if b == a {
 			return true
@@ -23,9 +23,9 @@ func Middleware(h http.Handler) http.Handler {
 
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
-		shouldBeEncoded := stringInSlice(
-			r.Header.Get("Content-Type"),
+		shouldBeEncoded := containsString(
 			contentTypesToBeEncoded,
+			w.Header().Get("Content-Type"),
 		)
 		if supportsGzip && shouldBeEncoded {
 			cw := newCompressWriter(w)
@@ -33,9 +33,7 @@ func Middleware(h http.Handler) http.Handler {
 			defer cw.Close()
 		}
 
-		contentEncoding := r.Header.Get("Content-Encoding")
-		sendsGzip := strings.Contains(contentEncoding, "gzip")
-		if sendsGzip {
+		if r.Header.Get("Content-Encoding") == "gzip" {
 			cr, err := newCompressReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

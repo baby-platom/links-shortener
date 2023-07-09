@@ -8,6 +8,7 @@ import (
 	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/shortid"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 // ShortenedUrlsByID stores initial urls
@@ -30,6 +31,7 @@ func Router() chi.Router {
 	r := chi.NewRouter()
 	r.Use(logger.Middleware)
 	r.Use(compress.Middleware)
+	r.Use(middleware.Compress(5, compress.ContentTypesToBeEncoded...))
 
 	r.Post("/api/shorten", shortenAPIHandler)
 

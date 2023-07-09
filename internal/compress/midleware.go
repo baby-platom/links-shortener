@@ -2,38 +2,22 @@ package compress
 
 import (
 	"net/http"
-	"strings"
+
+	"github.com/baby-platom/links-shortener/internal/logger"
 )
 
-var contentTypesToBeEncoded = []string{"application/json", "text/html"}
-
-func containsString(list []string, a string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
+// ContentTypesToBeEncoded defince the content types to be encoded
+var ContentTypesToBeEncoded = []string{"application/json", "text/html"}
 
 // Middleware for compression and decompression
 func Middleware(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		ow := w
-
-		acceptEncoding := r.Header.Get("Accept-Encoding")
-		supportsGzip := strings.Contains(acceptEncoding, "gzip")
-		shouldBeEncoded := containsString(
-			contentTypesToBeEncoded,
-			w.Header().Get("Content-Type"),
-		)
-		if supportsGzip && shouldBeEncoded {
-			cw := newCompressWriter(w)
-			ow = cw
-			defer cw.Close()
-		}
-
 		if r.Header.Get("Content-Encoding") == "gzip" {
+			logger.Log.Infow(
+				"Decoding content from gzip",
+				"uri", r.RequestURI,
+				"method", r.Method,
+			)
 			cr, err := newCompressReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -43,7 +27,7 @@ func Middleware(h http.Handler) http.Handler {
 			defer cr.Close()
 		}
 
-		h.ServeHTTP(ow, r)
+		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
 }

@@ -11,12 +11,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// ShortenedUrlsByIDType map id:initalUrl
-type ShortenedUrlsByIDType map[string]string
-
-// ShortenedUrlsByID stores initial urls
-var ShortenedUrlsByID = make(ShortenedUrlsByIDType)
-
 func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -31,7 +25,8 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := shortid.GenerateShortID()
 	ShortenedUrlsByID[id] = bodyString
-	fmt.Printf("Shortened '%s' to '%s'", bodyString, id)
+	ShortenedUrlsByID.Save(config.Config.FileStoragePath)
+	fmt.Printf("Shortened '%s' to '%s'\n", bodyString, id)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)

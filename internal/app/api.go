@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"context"
+	"time"
 
 	"github.com/baby-platom/links-shortener/internal/config"
+	"github.com/baby-platom/links-shortener/internal/database"
 	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 	"github.com/baby-platom/links-shortener/internal/shortid"
@@ -44,4 +47,13 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(data)
+}
+
+func pingDatabaseAPIHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+    defer cancel()
+	result := database.Connection.HealthCheck(ctx)
+	if result == false{
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }

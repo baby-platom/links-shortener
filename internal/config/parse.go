@@ -11,6 +11,7 @@ var Config struct {
 	BaseAddress     string
 	LogLevel        string
 	FileStoragePath string
+	DatabasaDSN string
 }
 
 // ParseFlags parses flags into the Config
@@ -19,6 +20,7 @@ func ParseFlags() {
 	flag.StringVar(&Config.BaseAddress, "b", "http://localhost:8080", "base address for shortened URLs")
 	flag.StringVar(&Config.LogLevel, "l", "info", "log level")
 	flag.StringVar(&Config.FileStoragePath, "f", "/tmp/short-url-db.json", "file name for storing short URLs")
+	flag.StringVar(&Config.DatabasaDSN, "d", "", "database DSN")
 	flag.Parse()
 
 	if envAddress := os.Getenv("SERVER_ADDRESS"); envAddress != "" {
@@ -32,5 +34,12 @@ func ParseFlags() {
 	}
 	if fileStoragePath := os.Getenv("FILE_STORAGE_PATH"); fileStoragePath != "" {
 		Config.FileStoragePath = fileStoragePath
+	}
+	if databasaDSN := os.Getenv("DATABASE_DSN"); databasaDSN != "" {
+		Config.DatabasaDSN = databasaDSN
+	}
+
+	if Config.DatabasaDSN == "" {
+		panic("DatabasaDSN not passed")
 	}
 }

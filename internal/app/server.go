@@ -5,6 +5,7 @@ import (
 
 	"github.com/baby-platom/links-shortener/internal/compress"
 	"github.com/baby-platom/links-shortener/internal/config"
+	"github.com/baby-platom/links-shortener/internal/database"
 	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/shortid"
 	"github.com/go-chi/chi/v5"
@@ -20,6 +21,10 @@ func Run() error {
 		return err
 	}
 	ShortenedUrlsByID.Load(config.Config.FileStoragePath)
+
+	database.OpenPostgres(config.Config.DatabasaDSN)
+	defer database.Connection.Close()
+
 	return http.ListenAndServe(
 		config.Config.Address,
 		Router(),
@@ -34,6 +39,7 @@ func Router() chi.Router {
 	r.Use(middleware.Compress(5, compress.ContentTypesToBeEncoded...))
 
 	r.Post("/api/shorten", shortenAPIHandler)
+	r.Get("/ping", pingDatabaseAPIHandler)
 
 	r.Post("/", shortenURLHandler)
 	r.Get("/{id}", restoreURLHandler)

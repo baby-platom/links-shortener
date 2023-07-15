@@ -53,7 +53,7 @@ func pingDatabaseAPIHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
     defer cancel()
 	result := database.Connection.HealthCheck(ctx)
-	if result == false{
+	if !result {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

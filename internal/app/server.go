@@ -22,8 +22,13 @@ func Run() error {
 	}
 	ShortenedUrlsByID.Load(config.Config.FileStoragePath)
 
-	database.OpenPostgres(config.Config.DatabasaDSN)
-	defer database.Connection.Close()
+	if config.Config.DatabaseDSN != "" {
+		err := database.OpenPostgres(config.Config.DatabaseDSN)
+		if err != nil {
+			panic(err)
+		}
+		defer database.Connection.Close()
+	}
 
 	return http.ListenAndServe(
 		config.Config.Address,

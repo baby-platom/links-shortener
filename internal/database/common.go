@@ -15,6 +15,10 @@ var Connection DB
 
 // HealthCheck pings the db connection
 func (db *DB) HealthCheck(ctx context.Context) bool {
+    if (*db == DB{}) {
+        return false
+    }
+
     if err := db.connection.PingContext(ctx); err != nil {
         return false
     }

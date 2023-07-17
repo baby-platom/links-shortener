@@ -25,7 +25,7 @@ func (s *ShortenedUrlsByIDDatabaseType) Save(ctx context.Context, id string, url
 
 // Get returns url by id
 func (s *ShortenedUrlsByIDDatabaseType) Get(ctx context.Context, id string) (string, bool) {
-	err, url := database.Connection.GetShortenedURL(ctx, id)
+	url, err := database.Connection.GetShortenedURL(ctx, id)
 	if err != nil {
 		panic(err)
 	}

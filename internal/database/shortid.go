@@ -39,7 +39,7 @@ func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string) erro
 	return err
 }
 
-func (db *DB) GetShortenedURL(ctx context.Context, id string) (error, string) {
+func (db *DB) GetShortenedURL(ctx context.Context, id string) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
 		"SELECT url FROM short_ids WHERE id=$1;",
@@ -50,5 +50,5 @@ func (db *DB) GetShortenedURL(ctx context.Context, id string) (error, string) {
 	if err == sql.ErrNoRows {
 		err = nil
 	}
-	return err, url
+	return url, err
 }

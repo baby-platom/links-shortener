@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +23,7 @@ const defaultContentType = "text/plain"
 const testingURL = "https://music.yandex.kz/home"
 
 var ts = httptest.NewServer(app.Router())
+var ctx = context.Background()
 
 type header struct {
 	name  string
@@ -44,6 +46,10 @@ type test struct {
 	name    string
 	request request
 	want    want
+}
+
+func init() {
+	app.ShortenedUrlsByID = shortid.NewShortenedUrlsByID()
 }
 
 func testRequest(
@@ -125,11 +131,11 @@ func TestShortenURLHandler(t *testing.T) {
 }
 
 func TestRestoreURLHandler(t *testing.T) {
-	shortenedUrlsByID := shortid.ShortenedUrlsByIDType{
-		"some_id": testingURL,
-	}
+	shortenedUrlsByID := make(map[string]string)
+	shortenedUrlsByID["some_id"] = testingURL
+
 	for key, value := range shortenedUrlsByID {
-		app.ShortenedUrlsByID[key] = value
+		app.ShortenedUrlsByID.Save(ctx, key, value)
 	}
 
 	tests := []test{

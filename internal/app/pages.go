@@ -24,8 +24,7 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := shortid.GenerateShortID()
-	ShortenedUrlsByID[id] = bodyString
-	ShortenedUrlsByID.Save(config.Config.FileStoragePath)
+	ShortenedUrlsByID.Save(r.Context(), id, bodyString)
 	fmt.Printf("Shortened '%s' to '%s'\n", bodyString, id)
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -35,7 +34,7 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 func restoreURLHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	url, ok := ShortenedUrlsByID[id]
+	url, ok := ShortenedUrlsByID.Get(r.Context(), id)
 	if !ok {
 		http.Error(w, "Nonexistent Id", http.StatusBadRequest)
 		return

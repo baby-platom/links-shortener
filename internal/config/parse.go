@@ -19,7 +19,7 @@ func ParseFlags() {
 	flag.StringVar(&Config.Address, "a", ":8080", "address and port to run server")
 	flag.StringVar(&Config.BaseAddress, "b", "http://localhost:8080", "base address for shortened URLs")
 	flag.StringVar(&Config.LogLevel, "l", "info", "log level")
-	flag.StringVar(&Config.FileStoragePath, "f", "/tmp/short-url-db.json", "file name for storing short URLs")
+	flag.StringVar(&Config.FileStoragePath, "f", "", "file name for storing short URLs")
 	flag.StringVar(&Config.DatabaseDSN, "d", "", "database DSN")
 	flag.Parse()
 

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"context"
-	"time"
 
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/database"
@@ -30,8 +28,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := shortid.GenerateShortID()
-	ShortenedUrlsByID[id] = req.URL
-	ShortenedUrlsByID.Save(config.Config.FileStoragePath)
+	ShortenedUrlsByID.Save(r.Context(), id, req.URL)
 	logger.Log.Infof("Shortened '%s' to '%s'\n", req.URL, id)
 
 	resp := models.ShortenResponse{
@@ -50,9 +47,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func pingDatabaseAPIHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-    defer cancel()
-	result := database.Connection.HealthCheck(ctx)
+	result := database.Connection.HealthCheck(r.Context())
 	if !result {
 		w.WriteHeader(http.StatusInternalServerError)
 	}

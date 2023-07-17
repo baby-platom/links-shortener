@@ -1,30 +1,32 @@
 package shortid
 
 import (
-	"encoding/json"
-	"os"
+    "context"
 )
 
-// ShortenedUrlsByIDType map id:initalUrl
-type ShortenedUrlsByIDType map[string]string
-
-// Save data into file
-func (data ShortenedUrlsByIDType) Save(fname string) error {
-	res, err := json.MarshalIndent(data, "", "   ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(fname, res, 0666)
+// ShortenedUrlsByIDInterface represents ShortenedUrlsByID behaviour
+type ShortenedUrlsByIDInterface interface {
+	Save(ctx context.Context, id string, url string)
+	Get(ctx context.Context, id string) (string, bool)
 }
 
-// Load data from a file
-func (data *ShortenedUrlsByIDType) Load(fname string) error {
-	res, err := os.ReadFile(fname)
-	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(res, data); err != nil {
-		return err
-	}
-	return nil
+// ShortenedUrlsByIDType stores id:url
+type ShortenedUrlsByIDType struct {
+	Data map[string]string
+}
+
+// NewShortenedUrlsByID return a new ShortenedUrlsByID
+func NewShortenedUrlsByID() *ShortenedUrlsByIDType {
+	return &ShortenedUrlsByIDType{Data: make(map[string]string)}
+}
+
+// Save creates new id:url relation
+func (s *ShortenedUrlsByIDType) Save(ctx context.Context, id string, url string) {
+	s.Data[id] = url
+}
+
+// Get returns url by id
+func (s *ShortenedUrlsByIDType) Get(ctx context.Context, id string) (string, bool) {
+	url, ok := s.Data[id]
+	return url, ok
 }

@@ -1,9 +1,9 @@
 package shortid
 
 import (
+	"context"
 	"encoding/json"
 	"os"
-	"context"
 
 	"github.com/baby-platom/links-shortener/internal/config"
 )
@@ -34,9 +34,13 @@ func (s *ShortenedUrlsByIDJSONType) SaveJSON(fname string) error {
 // Load data from a json file
 func (s *ShortenedUrlsByIDJSONType) LoadJSON(fname string) error {
 	res, err := os.ReadFile(fname)
-	if err != nil {
+	switch {
+	case os.IsNotExist(err):
+		return nil
+	case err != nil:
 		return err
 	}
+
 	if err := json.Unmarshal(res, &s.Data); err != nil {
 		return err
 	}

@@ -1,8 +1,8 @@
 package app
 
 import (
-	"net/http"
 	"context"
+	"net/http"
 
 	"github.com/baby-platom/links-shortener/internal/compress"
 	"github.com/baby-platom/links-shortener/internal/config"
@@ -24,10 +24,13 @@ func Run() error {
 
 	switch {
 	case config.Config.DatabaseDSN != "":
+		logger.Log.Info("Use NewShortenedUrlsByIDDatabase")
 		ShortenedUrlsByID = shortid.NewShortenedUrlsByIDDatabase()
 	case config.Config.FileStoragePath != "":
+		logger.Log.Info("Use NewShortenedUrlsByIDJson")
 		ShortenedUrlsByID = shortid.NewShortenedUrlsByIDJson(config.Config.FileStoragePath)
 	default:
+		logger.Log.Info("Use NewShortenedUrlsByID")
 		ShortenedUrlsByID = shortid.NewShortenedUrlsByID()
 	}
 
@@ -44,8 +47,10 @@ func Run() error {
 		if err != nil {
 			panic(err)
 		}
+		logger.Log.Infof("ShortIDs table exists: %v", exists)
 
 		if !exists {
+			logger.Log.Info("Creating new ShortIDs table")
 			err = database.Connection.CreateShortIDsTable(ctx)
 		}
 		if err != nil {

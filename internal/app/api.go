@@ -71,10 +71,10 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 	for _, portion := range req {
 		id := shortid.GenerateShortID()
 		b := models.BatchPortionShortenResponse{
-			CorrelationId: portion.CorrelationId,
+			CorrelationID: portion.CorrelationID,
 			ShortURL:      fmt.Sprintf("%s/%s", config.Config.BaseAddress, id),
 			ID:            id,
-			OriginalUrl:   portion.OriginalUrl,
+			OriginalURL:   portion.OriginalURL,
 		}
 		shortenedUrlsByIds = append(shortenedUrlsByIds, b)
 	}

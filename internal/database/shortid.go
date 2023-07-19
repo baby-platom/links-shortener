@@ -74,7 +74,7 @@ func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds [
 	defer stmt.Close()
 
 	for _, portion := range shortenedUrlsByIds {
-		_, err := stmt.ExecContext(ctx, portion.ID, portion.OriginalUrl)
+		_, err := stmt.ExecContext(ctx, portion.ID, portion.OriginalURL)
 		if err != nil {
 			return err
 		}

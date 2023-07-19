@@ -58,7 +58,7 @@ func (s *ShortenedUrlsByIDJSONType) Save(ctx context.Context, id string, url str
 
 func (s *ShortenedUrlsByIDJSONType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
 	for _, portion := range shortenedUrlsByIds {
-		s.Data[portion.ID] = portion.OriginalUrl
+		s.Data[portion.ID] = portion.OriginalURL
 	}
 	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
 		return err

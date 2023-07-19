@@ -12,14 +12,14 @@ type ShortenResponse struct {
 
 // BatchPortionShortenRequest - inbound data
 type BatchPortionShortenRequest struct {
-	CorrelationId string `json:"correlation_id"`
-	OriginalUrl   string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
 }
 
 // BatchPortionShortenResponse - outbound data
 type BatchPortionShortenResponse struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 	ID            string `json:"-"`
-	OriginalUrl   string `json:"-"`
+	OriginalURL   string `json:"-"`
 }

@@ -36,7 +36,7 @@ func (s *ShortenedUrlsByIDType) Get(ctx context.Context, id string) (string, boo
 
 func (s *ShortenedUrlsByIDType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
 	for _, portion := range shortenedUrlsByIds {
-		s.Data[portion.ID] = portion.OriginalUrl
+		s.Data[portion.ID] = portion.OriginalURL
 	}
 	return nil
 }

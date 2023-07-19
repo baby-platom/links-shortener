@@ -3,7 +3,11 @@ package database
 import (
 	"context"
 	"database/sql"
+
+	"github.com/baby-platom/links-shortener/internal/models"
 )
+
+var insertTemplate = "INSERT INTO short_ids (id, url) VALUES($1,$2);"
 
 // CreateShortIDsTable creates short_ids table
 func (db *DB) CreateShortIDsTable(ctx context.Context) error {
@@ -32,7 +36,7 @@ func (db *DB) CheckIfShortIDsTableExists(ctx context.Context) (bool, error) {
 func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string) error {
 	_, err := db.connection.ExecContext(
 		ctx,
-		"INSERT INTO short_ids VALUES($1,$2);",
+		insertTemplate,
 		id,
 		url,
 	)
@@ -51,4 +55,29 @@ func (db *DB) GetShortenedURL(ctx context.Context, id string) (string, error) {
 		err = nil
 	}
 	return url, err
+}
+
+func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
+	tx, err := db.connection.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(
+		ctx,
+		insertTemplate,
+	)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, portion := range shortenedUrlsByIds {
+		_, err := stmt.ExecContext(ctx, portion.ID, portion.OriginalUrl)
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }

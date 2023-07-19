@@ -1,13 +1,16 @@
 package shortid
 
 import (
-    "context"
+	"context"
+
+	"github.com/baby-platom/links-shortener/internal/models"
 )
 
 // ShortenedUrlsByIDInterface represents ShortenedUrlsByID behaviour
 type ShortenedUrlsByIDInterface interface {
 	Save(ctx context.Context, id string, url string)
 	Get(ctx context.Context, id string) (string, bool)
+	BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error
 }
 
 // ShortenedUrlsByIDType stores id:url
@@ -29,4 +32,11 @@ func (s *ShortenedUrlsByIDType) Save(ctx context.Context, id string, url string)
 func (s *ShortenedUrlsByIDType) Get(ctx context.Context, id string) (string, bool) {
 	url, ok := s.Data[id]
 	return url, ok
+}
+
+func (s *ShortenedUrlsByIDType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
+	for _, portion := range shortenedUrlsByIds {
+		s.Data[portion.ID] = portion.OriginalUrl
+	}
+	return nil
 }

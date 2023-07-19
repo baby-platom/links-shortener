@@ -71,9 +71,10 @@ func Router() chi.Router {
 	r.Use(compress.Middleware)
 	r.Use(middleware.Compress(5, compress.ContentTypesToBeEncoded...))
 
+	r.Post("/api/shorten/batch", shortenBatchAPIHandler)
 	r.Post("/api/shorten", shortenAPIHandler)
-	r.Get("/ping", pingDatabaseAPIHandler)
 
+	r.Get("/ping", pingDatabaseAPIHandler)
 	r.Post("/", shortenURLHandler)
 	r.Get("/{id}", restoreURLHandler)
 	return r

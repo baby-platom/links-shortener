@@ -52,3 +52,48 @@ func pingDatabaseAPIHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
+
+func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
+	var req []models.BatchPortionShortenRequest
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		logger.Log.Error("Cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if len(req) == 0 {
+		http.Error(w, "No data passed in request", http.StatusBadRequest)
+		return
+	}
+
+	var shortenedUrlsByIds []models.BatchPortionShortenResponse
+	for _, portion := range req {
+		id := shortid.GenerateShortID()
+		b := models.BatchPortionShortenResponse{
+			CorrelationId: portion.CorrelationId,
+			ShortURL:      fmt.Sprintf("%s/%s", config.Config.BaseAddress, id),
+			ID:            id,
+			OriginalUrl:   portion.OriginalUrl,
+		}
+		shortenedUrlsByIds = append(shortenedUrlsByIds, b)
+	}
+
+	err := ShortenedUrlsByID.BatchSave(r.Context(), shortenedUrlsByIds)
+	if err != nil {
+		logger.Log.Error("Error saving shortened urls", zap.Error(err))
+		http.Error(w, "Error saving shortened urls", http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(shortenedUrlsByIds)
+	if err != nil {
+		logger.Log.Error("Error encoding response", zap.Error(err))
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
+}

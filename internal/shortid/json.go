@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/baby-platom/links-shortener/internal/config"
+	"github.com/baby-platom/links-shortener/internal/models"
 )
 
 type ShortenedUrlsByIDJSONType struct {
@@ -53,4 +54,14 @@ func (s *ShortenedUrlsByIDJSONType) Save(ctx context.Context, id string, url str
 	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
 		panic(err)
 	}
+}
+
+func (s *ShortenedUrlsByIDJSONType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
+	for _, portion := range shortenedUrlsByIds {
+		s.Data[portion.ID] = portion.OriginalUrl
+	}
+	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
+		return err
+	}
+	return nil
 }

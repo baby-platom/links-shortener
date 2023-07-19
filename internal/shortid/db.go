@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/baby-platom/links-shortener/internal/database"
+	"github.com/baby-platom/links-shortener/internal/models"
 )
 
 type ShortenedUrlsByIDDatabaseType struct {
@@ -35,4 +36,11 @@ func (s *ShortenedUrlsByIDDatabaseType) Get(ctx context.Context, id string) (str
 		ok = false
 	}
 	return url, ok
+}
+
+func (s *ShortenedUrlsByIDDatabaseType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
+	if err := database.Connection.WriteBatchOfShortenedURL(ctx, shortenedUrlsByIds); err != nil {
+		return err
+	}
+	return nil
 }

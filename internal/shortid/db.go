@@ -17,16 +17,13 @@ func NewShortenedUrlsByIDDatabase() *ShortenedUrlsByIDDatabaseType {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDDatabaseType) Save(ctx context.Context, id string, url string) {
-	err := database.Connection.WriteShortenedURL(ctx, id, url)
-	if err != nil {
-		panic(err)
-	}
+func (s *ShortenedUrlsByIDDatabaseType) Save(ctx context.Context, id string, url string) error {
+	return database.Connection.WriteShortenedURL(ctx, id, url)
 }
 
 // Get returns url by id
 func (s *ShortenedUrlsByIDDatabaseType) Get(ctx context.Context, id string) (string, bool) {
-	url, err := database.Connection.GetShortenedURL(ctx, id)
+	url, err := database.Connection.GetInitialURLLByIDByID(ctx, id)
 	if err != nil {
 		panic(err)
 	}

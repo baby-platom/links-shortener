@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -27,9 +28,23 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := shortid.GenerateShortID()
-	ShortenedUrlsByID.Save(r.Context(), id, req.URL)
-	logger.Log.Infof("Shortened '%s' to '%s'\n", req.URL, id)
+	var id = shortid.GenerateShortID()
+	var status = http.StatusCreated
+	err := ShortenedUrlsByID.Save(r.Context(), id, req.URL)
+	if err != nil && errors.Is(err, database.ErrConflict) {
+		logger.Log.Error("Cannot shorten url", zap.Error(err))
+		id, err = database.Connection.GetIDByInitialURL(r.Context(), req.URL)
+		if err != nil {
+			logger.Log.Error("Cannot get already shortened url", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		status = http.StatusConflict
+	}
+
+	if status == http.StatusCreated {
+		logger.Log.Infof("Shortened '%s' to '%s'\n", req.URL, id)
+	}
 
 	resp := models.ShortenResponse{
 		Result: fmt.Sprintf("%s/%s", config.Config.BaseAddress, id),
@@ -42,7 +57,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(status)
 	w.Write(data)
 }
 

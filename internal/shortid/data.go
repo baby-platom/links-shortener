@@ -8,7 +8,7 @@ import (
 
 // ShortenedUrlsByIDInterface represents ShortenedUrlsByID behaviour
 type ShortenedUrlsByIDInterface interface {
-	Save(ctx context.Context, id string, url string)
+	Save(ctx context.Context, id string, url string) error
 	Get(ctx context.Context, id string) (string, bool)
 	BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error
 }
@@ -24,8 +24,9 @@ func NewShortenedUrlsByID() *ShortenedUrlsByIDType {
 }
 
 // Save creates new id:url relation
-func (s *ShortenedUrlsByIDType) Save(ctx context.Context, id string, url string) {
+func (s *ShortenedUrlsByIDType) Save(ctx context.Context, id string, url string) error {
 	s.Data[id] = url
+	return nil
 }
 
 // Get returns url by id

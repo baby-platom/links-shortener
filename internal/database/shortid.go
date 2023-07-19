@@ -3,6 +3,10 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/baby-platom/links-shortener/internal/models"
 )
@@ -11,11 +15,26 @@ var insertTemplate = "INSERT INTO short_ids (id, url) VALUES($1,$2);"
 
 // CreateShortIDsTable creates short_ids table
 func (db *DB) CreateShortIDsTable(ctx context.Context) error {
-	_, err := db.connection.ExecContext(
+	tx, err := db.connection.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(
 		ctx,
-		`CREATE TABLE short_ids("id" TEXT, "url" TEXT);`,
+		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT);`,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `CREATE UNIQUE INDEX original_url ON short_ids (url)`)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (db *DB) CheckIfShortIDsTableExists(ctx context.Context) (bool, error) {
@@ -40,10 +59,18 @@ func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string) erro
 		id,
 		url,
 	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			err = ErrConflict
+		}
+	}
+
 	return err
 }
 
-func (db *DB) GetShortenedURL(ctx context.Context, id string) (string, error) {
+func (db *DB) GetInitialURLLByIDByID(ctx context.Context, id string) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
 		"SELECT url FROM short_ids WHERE id=$1;",
@@ -55,6 +82,20 @@ func (db *DB) GetShortenedURL(ctx context.Context, id string) (string, error) {
 		err = nil
 	}
 	return url, err
+}
+
+func (db *DB) GetIDByInitialURL(ctx context.Context, url string) (string, error) {
+	row := db.connection.QueryRowContext(
+		ctx,
+		"SELECT id FROM short_ids WHERE url=$1;",
+		url,
+	)
+	var id string
+	err := row.Scan(&id)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return id, err
 }
 
 func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {

@@ -49,11 +49,9 @@ func (s *ShortenedUrlsByIDJSONType) LoadJSON(fname string) error {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDJSONType) Save(ctx context.Context, id string, url string) {
+func (s *ShortenedUrlsByIDJSONType) Save(ctx context.Context, id string, url string) error {
 	s.Data[id] = url
-	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
-		panic(err)
-	}
+	return s.SaveJSON(config.Config.FileStoragePath)
 }
 
 func (s *ShortenedUrlsByIDJSONType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {

@@ -1,4 +1,4 @@
-package shortid
+package storage
 
 import (
 	"context"
@@ -9,22 +9,23 @@ import (
 	"github.com/baby-platom/links-shortener/internal/models"
 )
 
-type ShortenedUrlsByIDJSONType struct {
-	ShortenedUrlsByIDType
+// ShortenedUrlsByIDFileStorer implements ShortenedUrlsByIDStorer interface using json file.
+type ShortenedUrlsByIDFileStorer struct {
+	ShortenedUrlsByIDMemoryStorer
 }
 
-// NewShortenedUrlsByIDJson return a new ShortenedUrlsByIDJson
-func NewShortenedUrlsByIDJson(fname string) *ShortenedUrlsByIDJSONType {
-	ShortenedUrlsByIDJSON := &ShortenedUrlsByIDJSONType{*NewShortenedUrlsByID()}
-	err := ShortenedUrlsByIDJSON.LoadJSON(fname)
+// CreateNewShortenedUrlsByIDJson return a new ShortenedUrlsByIDJson
+func CreateNewShortenedUrlsByIDFileStorer(fname string) *ShortenedUrlsByIDFileStorer {
+	NewShortenedUrlsByIDJSON := &ShortenedUrlsByIDFileStorer{*CreateNewShortenedUrlsByIDMemoryStorer()}
+	err := NewShortenedUrlsByIDJSON.LoadJSON(fname)
 	if err != nil {
 		panic(err)
 	}
-	return ShortenedUrlsByIDJSON
+	return NewShortenedUrlsByIDJSON
 }
 
 // Save data into a json file
-func (s *ShortenedUrlsByIDJSONType) SaveJSON(fname string) error {
+func (s *ShortenedUrlsByIDFileStorer) SaveJSON(fname string) error {
 	res, err := json.MarshalIndent(s.Data, "", "   ")
 	if err != nil {
 		return err
@@ -33,7 +34,7 @@ func (s *ShortenedUrlsByIDJSONType) SaveJSON(fname string) error {
 }
 
 // Load data from a json file
-func (s *ShortenedUrlsByIDJSONType) LoadJSON(fname string) error {
+func (s *ShortenedUrlsByIDFileStorer) LoadJSON(fname string) error {
 	res, err := os.ReadFile(fname)
 	switch {
 	case os.IsNotExist(err):
@@ -49,12 +50,12 @@ func (s *ShortenedUrlsByIDJSONType) LoadJSON(fname string) error {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDJSONType) Save(ctx context.Context, id string, url string) error {
+func (s *ShortenedUrlsByIDFileStorer) Save(ctx context.Context, id string, url string) error {
 	s.Data[id] = url
 	return s.SaveJSON(config.Config.FileStoragePath)
 }
 
-func (s *ShortenedUrlsByIDJSONType) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
+func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
 	for _, portion := range shortenedUrlsByIds {
 		s.Data[portion.ID] = portion.OriginalURL
 	}

@@ -30,10 +30,10 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 	var id = shortid.GenerateShortID()
 	var status = http.StatusCreated
-	err := ShortenedUrlsByID.Save(r.Context(), id, req.URL)
+	err := ShortenedUrlsByIDStorage.Save(r.Context(), id, req.URL)
 	if err != nil && errors.Is(err, database.ErrConflict) {
 		logger.Log.Error("Cannot shorten url", zap.Error(err))
-		id, err = database.Connection.GetIDByInitialURL(r.Context(), req.URL)
+		id, err = ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), req.URL)
 		if err != nil {
 			logger.Log.Error("Cannot get already shortened url", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -94,7 +94,7 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 		shortenedUrlsByIds = append(shortenedUrlsByIds, b)
 	}
 
-	err := ShortenedUrlsByID.BatchSave(r.Context(), shortenedUrlsByIds)
+	err := ShortenedUrlsByIDStorage.BatchSave(r.Context(), shortenedUrlsByIds)
 	if err != nil {
 		logger.Log.Error("Error saving shortened urls", zap.Error(err))
 		http.Error(w, "Error saving shortened urls", http.StatusInternalServerError)

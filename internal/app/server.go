@@ -8,13 +8,13 @@ import (
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/database"
 	"github.com/baby-platom/links-shortener/internal/logger"
-	"github.com/baby-platom/links-shortener/internal/shortid"
+	"github.com/baby-platom/links-shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-// ShortenedUrlsByID stores initial urls
-var ShortenedUrlsByID shortid.ShortenedUrlsByIDInterface
+// ShortenedUrlsByIDStorage  stores and provides access to shortened urls by ID.
+var ShortenedUrlsByIDStorage storage.ShortenedUrlsByIDStorer
 
 // Run server
 func Run() error {
@@ -25,17 +25,17 @@ func Run() error {
 	switch {
 	case config.Config.DatabaseDSN != "":
 		logger.Log.Info("Use NewShortenedUrlsByIDDatabase")
-		ShortenedUrlsByID = shortid.NewShortenedUrlsByIDDatabase()
+		ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDDBStorer()
 	case config.Config.FileStoragePath != "":
 		logger.Log.Info("Use NewShortenedUrlsByIDJson")
-		ShortenedUrlsByID = shortid.NewShortenedUrlsByIDJson(config.Config.FileStoragePath)
+		ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDFileStorer(config.Config.FileStoragePath)
 	default:
 		logger.Log.Info("Use NewShortenedUrlsByID")
-		ShortenedUrlsByID = shortid.NewShortenedUrlsByID()
+		ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
 	}
 
-	switch ShortenedUrlsByID.(type) {
-	case *shortid.ShortenedUrlsByIDDatabaseType:
+	switch ShortenedUrlsByIDStorage.(type) {
+	case *storage.ShortenedUrlsByIDDBStorer:
 		err := database.OpenPostgres(config.Config.DatabaseDSN)
 		if err != nil {
 			panic(err)

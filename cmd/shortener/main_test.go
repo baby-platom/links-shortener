@@ -16,7 +16,7 @@ import (
 
 	"github.com/baby-platom/links-shortener/internal/app"
 	"github.com/baby-platom/links-shortener/internal/models"
-	"github.com/baby-platom/links-shortener/internal/shortid"
+	"github.com/baby-platom/links-shortener/internal/storage"
 )
 
 const defaultContentType = "text/plain"
@@ -49,7 +49,7 @@ type test struct {
 }
 
 func init() {
-	app.ShortenedUrlsByID = shortid.NewShortenedUrlsByID()
+	app.ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
 }
 
 func testRequest(
@@ -135,7 +135,7 @@ func TestRestoreURLHandler(t *testing.T) {
 	shortenedUrlsByID["some_id"] = testingURL
 
 	for key, value := range shortenedUrlsByID {
-		app.ShortenedUrlsByID.Save(ctx, key, value)
+		app.ShortenedUrlsByIDStorage.Save(ctx, key, value)
 	}
 
 	tests := []test{

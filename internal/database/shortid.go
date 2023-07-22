@@ -70,7 +70,7 @@ func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string) erro
 	return err
 }
 
-func (db *DB) GetInitialURLLByIDByID(ctx context.Context, id string) (string, error) {
+func (db *DB) GetInitialURLByID(ctx context.Context, id string) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
 		"SELECT url FROM short_ids WHERE id=$1;",

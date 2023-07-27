@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,13 +16,14 @@ import (
 
 	"github.com/baby-platom/links-shortener/internal/app"
 	"github.com/baby-platom/links-shortener/internal/models"
-	"github.com/baby-platom/links-shortener/internal/shortid"
+	"github.com/baby-platom/links-shortener/internal/storage"
 )
 
 const defaultContentType = "text/plain"
 const testingURL = "https://music.yandex.kz/home"
 
 var ts = httptest.NewServer(app.Router())
+var ctx = context.Background()
 
 type header struct {
 	name  string
@@ -44,6 +46,10 @@ type test struct {
 	name    string
 	request request
 	want    want
+}
+
+func init() {
+	app.ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
 }
 
 func testRequest(
@@ -125,11 +131,11 @@ func TestShortenURLHandler(t *testing.T) {
 }
 
 func TestRestoreURLHandler(t *testing.T) {
-	shortenedUrlsByID := shortid.ShortenedUrlsByIDType{
-		"some_id": testingURL,
-	}
+	shortenedUrlsByID := make(map[string]string)
+	shortenedUrlsByID["some_id"] = testingURL
+
 	for key, value := range shortenedUrlsByID {
-		app.ShortenedUrlsByID[key] = value
+		app.ShortenedUrlsByIDStorage.Save(ctx, key, value)
 	}
 
 	tests := []test{

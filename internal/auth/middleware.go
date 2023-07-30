@@ -53,9 +53,6 @@ func Middleware(h http.Handler) http.Handler {
 					"error", err,
 				)
 			}
-
-			w.WriteHeader(http.StatusUnauthorized)
-			return
 		}
 
 		h.ServeHTTP(w, r)

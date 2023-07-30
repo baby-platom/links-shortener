@@ -3,6 +3,8 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/baby-platom/links-shortener/internal/config"
@@ -60,4 +62,18 @@ func GetUserId(tokenString string) (int, error) {
 
 	logger.Log.Info("Token is valid")
 	return claims.UserID, nil
+}
+
+func GetUserIDForHandler(w http.ResponseWriter, r *http.Request) int {
+	var authToken string
+	authCookie, err := r.Cookie("auth")
+	if err == http.ErrNoCookie {
+		data := w.Header().Get("Set-Cookie")
+		data = strings.Split(data, ";")[0]
+		authToken = strings.Split(data, "=")[1]
+	} else {
+		authToken = authCookie.Value
+	}
+	userID, _ := GetUserId(authToken)
+	return userID
 }

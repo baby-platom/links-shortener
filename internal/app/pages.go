@@ -28,8 +28,7 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authCookie, _ := r.Cookie("auth")
-	userID, _ := auth.GetUserId(authCookie.Value)
+	userID := auth.GetUserIDForHandler(w, r)
 
 	id := shortid.GenerateShortID()
 	err = ShortenedUrlsByIDStorage.Save(r.Context(), id, initialURL, userID)
@@ -55,8 +54,7 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func restoreURLHandler(w http.ResponseWriter, r *http.Request) {
-	authCookie, _ := r.Cookie("auth")
-	userID, _ := auth.GetUserId(authCookie.Value)
+	userID := auth.GetUserIDForHandler(w, r)
 
 	id := chi.URLParam(r, "id")
 	url, ok := ShortenedUrlsByIDStorage.Get(r.Context(), id, userID)

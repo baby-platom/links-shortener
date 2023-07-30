@@ -29,8 +29,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authCookie, _ := r.Cookie("auth")
-	userID, _ := auth.GetUserId(authCookie.Value)
+	userID := auth.GetUserIDForHandler(w, r)
 
 	var id = shortid.GenerateShortID()
 	var status = http.StatusCreated
@@ -47,7 +46,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if status == http.StatusCreated {
-		logger.Log.Infof("Shortened '%s' to '%s'\n", req.URL, id)
+		logger.Log.Infof("Shortened '%s' to '%s'", req.URL, id)
 	}
 
 	resp := models.ShortenResponse{
@@ -98,8 +97,7 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 		shortenedUrlsByIds = append(shortenedUrlsByIds, b)
 	}
 
-	authCookie, _ := r.Cookie("auth")
-	userID, _ := auth.GetUserId(authCookie.Value)
+	userID := auth.GetUserIDForHandler(w, r)
 
 	err := ShortenedUrlsByIDStorage.BatchSave(r.Context(), shortenedUrlsByIds, userID)
 	if err != nil {
@@ -121,8 +119,7 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
-	authCookie, _ := r.Cookie("auth")
-	userID, _ := auth.GetUserId(authCookie.Value)
+	userID := auth.GetUserIDForHandler(w, r)
 
 	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsList(
 		r.Context(), config.Config.BaseAddress, userID,
@@ -133,7 +130,15 @@ func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(userShortenURLsList) > 0 {
+	var tokenIsNew bool
+	if w.Header().Get("Set-Cookie") != "" {
+		tokenIsNew = true
+	}
+
+	if tokenIsNew {
+		logger.Log.Warn("Passed JWT token is invalid")
+		w.WriteHeader(http.StatusUnauthorized)
+	} else if len(userShortenURLsList) > 0 {
 		data, err := json.Marshal(userShortenURLsList)
 		if err != nil {
 			logger.Log.Error("Error encoding response", zap.Error(err))

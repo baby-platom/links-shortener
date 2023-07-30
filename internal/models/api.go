@@ -23,3 +23,9 @@ type BatchPortionShortenResponse struct {
 	ID            string `json:"-"`
 	OriginalURL   string `json:"-"`
 }
+
+// UserShortenURLsList - outbound data
+type UserShortenURLsListResponse struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}

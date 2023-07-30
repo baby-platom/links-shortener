@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -11,7 +12,7 @@ import (
 	"github.com/baby-platom/links-shortener/internal/models"
 )
 
-var insertTemplate = "INSERT INTO short_ids (id, url) VALUES($1,$2);"
+var insertTemplate = "INSERT INTO short_ids (id, url, user_id) VALUES($1,$2,$3);"
 
 // CreateShortIDsTable creates short_ids table
 func (db *DB) CreateShortIDsTable(ctx context.Context) error {
@@ -23,7 +24,7 @@ func (db *DB) CreateShortIDsTable(ctx context.Context) error {
 
 	_, err = tx.ExecContext(
 		ctx,
-		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT);`,
+		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT, "user_id" INT);`,
 	)
 	if err != nil {
 		return err
@@ -52,12 +53,13 @@ func (db *DB) CheckIfShortIDsTableExists(ctx context.Context) (bool, error) {
 	return exists, err
 }
 
-func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string) error {
+func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string, userID int) error {
 	_, err := db.connection.ExecContext(
 		ctx,
 		insertTemplate,
 		id,
 		url,
+		userID,
 	)
 
 	if err != nil {
@@ -70,11 +72,12 @@ func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string) erro
 	return err
 }
 
-func (db *DB) GetInitialURLByID(ctx context.Context, id string) (string, error) {
+func (db *DB) GetInitialURLByID(ctx context.Context, id string, userID int) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
-		"SELECT url FROM short_ids WHERE id=$1;",
+		"SELECT url FROM short_ids WHERE id=$1 AND user_id=$2;",
 		id,
+		userID,
 	)
 	var url string
 	err := row.Scan(&url)
@@ -84,11 +87,12 @@ func (db *DB) GetInitialURLByID(ctx context.Context, id string) (string, error) 
 	return url, err
 }
 
-func (db *DB) GetIDByInitialURL(ctx context.Context, url string) (string, error) {
+func (db *DB) GetIDByInitialURL(ctx context.Context, url string, userID int) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
-		"SELECT id FROM short_ids WHERE url=$1;",
+		"SELECT id FROM short_ids WHERE url=$1 AND user_id=$2;",
 		url,
+		userID,
 	)
 	var id string
 	err := row.Scan(&id)
@@ -98,7 +102,7 @@ func (db *DB) GetIDByInitialURL(ctx context.Context, url string) (string, error)
 	return id, err
 }
 
-func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
+func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
 	tx, err := db.connection.Begin()
 	if err != nil {
 		return err
@@ -115,10 +119,41 @@ func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds [
 	defer stmt.Close()
 
 	for _, portion := range shortenedUrlsByIds {
-		_, err := stmt.ExecContext(ctx, portion.ID, portion.OriginalURL)
+		_, err := stmt.ExecContext(ctx, portion.ID, portion.OriginalURL, userID)
 		if err != nil {
 			return err
 		}
 	}
 	return tx.Commit()
+}
+
+func (db *DB) GetUserShortenURLsList(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
+	result := make([]models.UserShortenURLsListResponse, 0)
+	rows, err := db.connection.QueryContext(
+		ctx,
+		"SELECT id, url FROM short_ids WHERE user_id=$1;",
+		userID,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var piece models.UserShortenURLsListResponse
+		err = rows.Scan(&piece.ShortURL, &piece.OriginalURL)
+		if err != nil {
+			return result, err
+		}
+
+		piece.ShortURL = fmt.Sprintf("%s/%s", baseAddress, piece.ShortURL)
+		result = append(result, piece)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return result, err
+	}
+	return result, nil
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/baby-platom/links-shortener/internal/auth"
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/database"
 	"github.com/baby-platom/links-shortener/internal/logger"
@@ -27,11 +28,14 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	authCookie, _ := r.Cookie("auth")
+	userID, _ := auth.GetUserId(authCookie.Value)
+
 	id := shortid.GenerateShortID()
-	err = ShortenedUrlsByIDStorage.Save(r.Context(), id, initialURL)
+	err = ShortenedUrlsByIDStorage.Save(r.Context(), id, initialURL, userID)
 	if err != nil && errors.Is(err, database.ErrConflict) {
 		logger.Log.Error("Cannot shorten url", zap.Error(err))
-		id, err := ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), initialURL)
+		id, err := ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), initialURL, userID)
 		if err != nil {
 			logger.Log.Error("Cannot get already shortened url", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -51,8 +55,11 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func restoreURLHandler(w http.ResponseWriter, r *http.Request) {
+	authCookie, _ := r.Cookie("auth")
+	userID, _ := auth.GetUserId(authCookie.Value)
+
 	id := chi.URLParam(r, "id")
-	url, ok := ShortenedUrlsByIDStorage.Get(r.Context(), id)
+	url, ok := ShortenedUrlsByIDStorage.Get(r.Context(), id, userID)
 	if !ok {
 		http.Error(w, "Nonexistent Id", http.StatusBadRequest)
 		return

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/baby-platom/links-shortener/internal/auth"
 	"github.com/baby-platom/links-shortener/internal/compress"
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/database"
@@ -69,8 +70,10 @@ func Router() chi.Router {
 	r := chi.NewRouter()
 	r.Use(logger.Middleware)
 	r.Use(compress.Middleware)
+	r.Use(auth.Middleware)
 	r.Use(middleware.Compress(5, compress.ContentTypesToBeEncoded...))
 
+	r.Get("/api/user/urls", getUserShortenURLsAPIHandler)
 	r.Post("/api/shorten/batch", shortenBatchAPIHandler)
 	r.Post("/api/shorten", shortenAPIHandler)
 

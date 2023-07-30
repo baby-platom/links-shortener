@@ -21,6 +21,7 @@ import (
 
 const defaultContentType = "text/plain"
 const testingURL = "https://music.yandex.kz/home"
+const userID int = 1
 
 var ts = httptest.NewServer(app.Router())
 var ctx = context.Background()
@@ -135,7 +136,7 @@ func TestRestoreURLHandler(t *testing.T) {
 	shortenedUrlsByID["some_id"] = testingURL
 
 	for key, value := range shortenedUrlsByID {
-		app.ShortenedUrlsByIDStorage.Save(ctx, key, value)
+		app.ShortenedUrlsByIDStorage.Save(ctx, key, value, userID)
 	}
 
 	tests := []test{

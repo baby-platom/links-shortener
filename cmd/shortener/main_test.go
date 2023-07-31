@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/baby-platom/links-shortener/internal/app"
-	"github.com/baby-platom/links-shortener/internal/auth"
 	"github.com/baby-platom/links-shortener/internal/config"
 
 	// "github.com/baby-platom/links-shortener/internal/logger"
@@ -57,7 +56,6 @@ type test struct {
 
 func init() {
 	app.ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
-	auth.TestsMode = true
 	// logger.Initialize(config.Config.LogLevel)
 }
 

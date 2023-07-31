@@ -12,7 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var TestsMode bool
+var TestsMode bool = true
 var UserID int = 1
 
 type claims struct {

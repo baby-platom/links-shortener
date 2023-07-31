@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+var TestsMode bool
 var UserID int = 1
 
 type claims struct {
@@ -30,7 +31,9 @@ func BuildJWTString() (string, error) {
 			UserID: UserID,
 		},
 	)
-	UserID += 1
+	if !TestsMode {
+		UserID += 1
+	}
 
 	tokenString, err := token.SignedString([]byte(config.Config.AuthSecretKey))
 	if err != nil {

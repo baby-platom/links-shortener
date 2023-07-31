@@ -16,7 +16,8 @@ import (
 
 	"github.com/baby-platom/links-shortener/internal/app"
 	"github.com/baby-platom/links-shortener/internal/config"
-	"github.com/baby-platom/links-shortener/internal/logger"
+
+	// "github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 	"github.com/baby-platom/links-shortener/internal/storage"
 )

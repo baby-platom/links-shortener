@@ -12,7 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-const UserID int = 1
+var UserID int = 1
 
 type claims struct {
 	jwt.RegisteredClaims
@@ -30,6 +30,7 @@ func BuildJWTString() (string, error) {
 			UserID: UserID,
 		},
 	)
+	UserID += 1
 
 	tokenString, err := token.SignedString([]byte(config.Config.AuthSecretKey))
 	if err != nil {

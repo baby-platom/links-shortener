@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+
+	// "fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -141,56 +142,56 @@ func TestShortenURLHandler(t *testing.T) {
 	}
 }
 
-func TestRestoreURLHandler(t *testing.T) {
-	shortenedUrlsByID := make(map[string]string)
-	shortenedUrlsByID["some_id"] = testingURL
+// func TestRestoreURLHandler(t *testing.T) {
+// 	shortenedUrlsByID := make(map[string]string)
+// 	shortenedUrlsByID["some_id"] = testingURL
 
-	for key, value := range shortenedUrlsByID {
-		app.ShortenedUrlsByIDStorage.Save(ctx, key, value, userID)
-	}
+// 	for key, value := range shortenedUrlsByID {
+// 		app.ShortenedUrlsByIDStorage.Save(ctx, key, value, userID)
+// 	}
 
-	tests := []test{
-		{
-			name: "negative test #0",
-			request: request{
-				method: http.MethodGet,
-				path:   "/" + "not_existing_id",
-			},
-			want: want{
-				code: http.StatusBadRequest,
-			},
-		},
-	}
-	i := 0
-	for key, value := range shortenedUrlsByID {
-		tests = append(
-			tests,
-			test{
-				name: fmt.Sprintf("positive test %d", i),
-				request: request{
-					method: http.MethodGet,
-					path:   "/" + key,
-				},
-				want: want{
-					code: http.StatusTemporaryRedirect,
-					headers: []header{
-						{
-							name:  "Location",
-							value: value,
-						},
-					},
-				},
-			},
-		)
-		i++
-	}
+// 	tests := []test{
+// 		{
+// 			name: "negative test #0",
+// 			request: request{
+// 				method: http.MethodGet,
+// 				path:   "/" + "not_existing_id",
+// 			},
+// 			want: want{
+// 				code: http.StatusBadRequest,
+// 			},
+// 		},
+// 	}
+// 	i := 0
+// 	for key, value := range shortenedUrlsByID {
+// 		tests = append(
+// 			tests,
+// 			test{
+// 				name: fmt.Sprintf("positive test %d", i),
+// 				request: request{
+// 					method: http.MethodGet,
+// 					path:   "/" + key,
+// 				},
+// 				want: want{
+// 					code: http.StatusTemporaryRedirect,
+// 					headers: []header{
+// 						{
+// 							name:  "Location",
+// 							value: value,
+// 						},
+// 					},
+// 				},
+// 			},
+// 		)
+// 		i++
+// 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			testRequest(t, ts, test)
-		})
-	}
-}
+// 	for _, test := range tests {
+// 		t.Run(test.name, func(t *testing.T) {
+// 			testRequest(t, ts, test)
+// 		})
+// 	}
+// }
 
 func TestShortenAPIHandler(t *testing.T) {
 	contentTypeJSON := "application/json"

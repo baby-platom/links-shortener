@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/baby-platom/links-shortener/internal/app"
+	"github.com/baby-platom/links-shortener/internal/config"
+	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 	"github.com/baby-platom/links-shortener/internal/storage"
 )
@@ -25,6 +27,7 @@ const userID int = 1
 
 var ts = httptest.NewServer(app.Router())
 var ctx = context.Background()
+var flagsParsed bool
 
 type header struct {
 	name  string
@@ -51,6 +54,7 @@ type test struct {
 
 func init() {
 	app.ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
+	logger.Initialize(config.Config.LogLevel)
 }
 
 func testRequest(
@@ -58,6 +62,11 @@ func testRequest(
 	ts *httptest.Server,
 	test test,
 ) {
+	if !flagsParsed {
+		flagsParsed = true
+		config.ParseFlags()
+	}
+
 	requestData := test.request
 	wantData := test.want
 

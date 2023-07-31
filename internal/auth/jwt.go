@@ -39,25 +39,25 @@ func BuildJWTString() (string, error) {
 	return tokenString, nil
 }
 
-func GetUserId(tokenString string) (int, error) {
+func GetUserID(tokenString string) (int, error) {
 	claims := &claims{}
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		claims,
 		func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", t.Header["alg"])
+				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 			}
 			return []byte(config.Config.AuthSecretKey), nil
 		},
 	)
 	if err != nil {
-		return 0, fmt.Errorf("Error occured while parsing JWT token: %w", err)
+		return 0, fmt.Errorf("error occured while parsing JWT token: %w", err)
 	}
 
 	if !token.Valid {
 		logger.Log.Warn("Token is not valid")
-		return 0, errors.New("Token is not valid")
+		return 0, errors.New("token is not valid")
 	}
 
 	logger.Log.Info("Token is valid")
@@ -74,6 +74,6 @@ func GetUserIDForHandler(w http.ResponseWriter, r *http.Request) int {
 	} else {
 		authToken = authCookie.Value
 	}
-	userID, _ := GetUserId(authToken)
+	userID, _ := GetUserID(authToken)
 	return userID
 }

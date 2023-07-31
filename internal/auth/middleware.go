@@ -25,7 +25,7 @@ func Middleware(h http.Handler) http.Handler {
 		}
 
 		if authCookie != nil {
-			_, err = GetUserId(authCookie.Value)
+			_, err = GetUserID(authCookie.Value)
 			if err != nil {
 				passNewAuthCookie = true
 				logger.Log.Warnw(

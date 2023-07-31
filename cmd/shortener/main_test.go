@@ -54,7 +54,7 @@ type test struct {
 
 func init() {
 	app.ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
-	logger.Initialize(config.Config.LogLevel)
+	// logger.Initialize(config.Config.LogLevel)
 }
 
 func testRequest(

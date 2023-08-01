@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -12,15 +13,19 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var UserID int = 1
-
 type claims struct {
 	jwt.RegisteredClaims
 	UserID int
 }
 
+func init() {
+	rand.Seed(time.Now().Unix())
+}
+
 // BuildJWTString - creates and return a string representation of JWT token
 func BuildJWTString() (string, error) {
+	UserID := rand.Int()
+
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		claims{
@@ -30,7 +35,6 @@ func BuildJWTString() (string, error) {
 			UserID: UserID,
 		},
 	)
-	UserID += 1
 
 	tokenString, err := token.SignedString([]byte(config.Config.AuthSecretKey))
 	if err != nil {

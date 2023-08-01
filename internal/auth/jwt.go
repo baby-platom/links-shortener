@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -18,13 +19,12 @@ type claims struct {
 	UserID int
 }
 
-func init() {
-	rand.Seed(time.Now().Unix())
-}
+var r = rand.New(rand.NewSource(time.Now().Unix()))
+var limit = int(math.Pow(2, 20))
 
 // BuildJWTString - creates and return a string representation of JWT token
 func BuildJWTString() (string, error) {
-	UserID := rand.Int()
+	UserID := r.Intn(limit)
 
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,

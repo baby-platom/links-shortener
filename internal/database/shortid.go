@@ -34,7 +34,6 @@ func (db *DB) CreateShortIDsTable(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	return tx.Commit()
 }
 

@@ -36,7 +36,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 	err := ShortenedUrlsByIDStorage.Save(r.Context(), id, req.URL, userID)
 	if err != nil && errors.Is(err, database.ErrConflict) {
 		logger.Log.Error("Cannot shorten url", zap.Error(err))
-		id, err = ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), req.URL, userID)
+		id, err = ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), req.URL)
 		if err != nil {
 			logger.Log.Error("Cannot get already shortened url", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusBadRequest)

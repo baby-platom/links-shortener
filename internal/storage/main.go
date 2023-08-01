@@ -9,8 +9,8 @@ import (
 // ShortenedUrlsByIDStorer stores and provides access to shortened urls by ID.
 type ShortenedUrlsByIDStorer interface {
 	Save(ctx context.Context, id string, url string, userID int) error
-	Get(ctx context.Context, id string, userID int) (string, bool)
+	Get(ctx context.Context, id string) (string, bool)
 	BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error
-	GetIDByURL(ctx context.Context, url string, userID int) (string, error)
+	GetIDByURL(ctx context.Context, url string) (string, error)
 	GetUserShortenURLsList(ctx context.Context, baseAddress string, userIDToFind int) ([]models.UserShortenURLsListResponse, error)
 }

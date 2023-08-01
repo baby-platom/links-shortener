@@ -72,12 +72,11 @@ func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string, user
 	return err
 }
 
-func (db *DB) GetInitialURLByID(ctx context.Context, id string, userID int) (string, error) {
+func (db *DB) GetInitialURLByID(ctx context.Context, id string) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
-		"SELECT url FROM short_ids WHERE id=$1 AND user_id=$2;",
+		"SELECT url FROM short_ids WHERE id=$1",
 		id,
-		userID,
 	)
 	var url string
 	err := row.Scan(&url)
@@ -87,12 +86,11 @@ func (db *DB) GetInitialURLByID(ctx context.Context, id string, userID int) (str
 	return url, err
 }
 
-func (db *DB) GetIDByInitialURL(ctx context.Context, url string, userID int) (string, error) {
+func (db *DB) GetIDByInitialURL(ctx context.Context, url string) (string, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
-		"SELECT id FROM short_ids WHERE url=$1 AND user_id=$2;",
+		"SELECT id FROM short_ids WHERE url=$1",
 		url,
-		userID,
 	)
 	var id string
 	err := row.Scan(&id)

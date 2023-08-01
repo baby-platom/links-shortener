@@ -23,8 +23,8 @@ func (s *ShortenedUrlsByIDDBStorer) Save(ctx context.Context, id string, url str
 }
 
 // Get returns url by id
-func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string, userID int) (string, bool) {
-	url, err := database.Connection.GetInitialURLByID(ctx, id, userID)
+func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string, bool) {
+	url, err := database.Connection.GetInitialURLByID(ctx, id)
 	if err != nil {
 		panic(err)
 	}
@@ -43,8 +43,8 @@ func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrls
 	return nil
 }
 
-func (s *ShortenedUrlsByIDDBStorer) GetIDByURL(ctx context.Context, initialURL string, userID int) (string, error) {
-	return database.Connection.GetIDByInitialURL(ctx, initialURL, userID)
+func (s *ShortenedUrlsByIDDBStorer) GetIDByURL(ctx context.Context, initialURL string) (string, error) {
+	return database.Connection.GetIDByInitialURL(ctx, initialURL)
 }
 
 func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {

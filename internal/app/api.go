@@ -130,12 +130,12 @@ func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tokenIsNew bool
-	if w.Header().Get("Set-Cookie") != "" {
-		tokenIsNew = true
+	var noToken bool
+	if w.Header().Get("No-Token-Passed") != "" {
+		noToken = true
 	}
 
-	if tokenIsNew {
+	if noToken {
 		logger.Log.Warn("Passed JWT token is invalid")
 		w.WriteHeader(http.StatusUnauthorized)
 	} else if len(userShortenURLsList) > 0 {

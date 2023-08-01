@@ -56,6 +56,7 @@ func GetUserID(tokenString string) (int, error) {
 			return []byte(config.Config.AuthSecretKey), nil
 		},
 	)
+
 	if err != nil {
 		return 0, fmt.Errorf("error occured while parsing JWT token: %w", err)
 	}

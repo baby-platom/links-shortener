@@ -32,6 +32,7 @@ func Middleware(h http.Handler) http.Handler {
 					"Error occured while parsing auth cookie",
 					"error", err,
 				)
+				w.Header().Set("No-Token-Passed", "true")
 			}
 		}
 

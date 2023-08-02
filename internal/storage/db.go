@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/baby-platom/links-shortener/internal/database"
+	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 )
 
@@ -60,5 +61,6 @@ func (s *ShortenedUrlsByIDDBStorer) BacthDelete(ctx context.Context, data []dele
 	for _, piece := range data {
 		ids = append(ids, piece.ids...)
 	}
+	logger.Log.Infoln(ids)
 	return database.Connection.BatchDelete(ctx, ids)
 }

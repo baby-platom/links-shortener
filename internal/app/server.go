@@ -60,7 +60,7 @@ func Run() error {
 		}
 	}
 
-	go ShortenedUrlsByIDStorage.MonitorDeleted(ctx)
+	go storage.MonitorDeleted(ctx, ShortenedUrlsByIDStorage)
 
 	return http.ListenAndServe(
 		config.Config.Address,

@@ -3,9 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 )
 
@@ -28,6 +26,10 @@ func CreateNewShortenedUrlsByIDMemoryStorer() *ShortenedUrlsByIDMemoryStorer {
 		UsersShortenedURLs: make(map[string][]string),
 		deleteCh:           make(chan deleteData, 32),
 	}
+}
+
+func (s *ShortenedUrlsByIDMemoryStorer) GetDeleteCh() chan deleteData {
+	return s.deleteCh
 }
 
 // Save creates new id:url relation
@@ -81,7 +83,7 @@ func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsListResponse(ctx conte
 }
 
 func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind string) ([]string, error) {
-	shortURLs, _ := s.UsersShortenedURLs[userIDToFind]
+	shortURLs := s.UsersShortenedURLs[userIDToFind]
 	return shortURLs, nil
 }
 
@@ -113,29 +115,6 @@ func (s *ShortenedUrlsByIDMemoryStorer) BacthDelete(ctx context.Context, data []
 	}
 
 	return nil
-}
-
-func (s *ShortenedUrlsByIDMemoryStorer) MonitorDeleted(ctx context.Context) {
-	ticker := time.NewTicker(10 * time.Second)
-
-	var toDelete []deleteData
-
-	for {
-		select {
-		case new := <-s.deleteCh:
-			toDelete = append(toDelete, new)
-		case <-ticker.C:
-			if len(toDelete) == 0 {
-				continue
-			}
-
-			err := s.BacthDelete(ctx, toDelete)
-			if err != nil {
-				logger.Log.Errorf("error occurred while deleting batch of shortened urls: %v", err)
-			}
-			toDelete = nil
-		}
-	}
 }
 
 func (s *ShortenedUrlsByIDMemoryStorer) Delete(ctx context.Context, ids []string, userID string) {

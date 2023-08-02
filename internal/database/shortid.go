@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 )
 
@@ -190,9 +191,18 @@ func (db *DB) GetUserShortenURLsList(ctx context.Context, userID string) ([]stri
 }
 
 func (db *DB) BatchDelete(ctx context.Context, ids []string) error {
-	values := strings.Join(ids, ",")
+	var quotedIDs []string
+	for _, id := range ids {
+		quotedID := fmt.Sprintf("'%s'", id)
+		quotedIDs = append(quotedIDs, quotedID)
+	}
+
+	values := strings.Join(quotedIDs, ",")
+
 	deleteTemplate := `UPDATE short_ids SET deleted=TRUE WHERE id IN ` +
 		fmt.Sprintf("(%s)", values) + ";"
+
+	logger.Log.Info(deleteTemplate)
 
 	_, err := db.connection.ExecContext(
 		ctx,

@@ -35,6 +35,8 @@ func Run() error {
 		ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
 	}
 
+	ctx := context.Background()
+
 	switch ShortenedUrlsByIDStorage.(type) {
 	case *storage.ShortenedUrlsByIDDBStorer:
 		err := database.OpenPostgres(config.Config.DatabaseDSN)
@@ -43,7 +45,6 @@ func Run() error {
 		}
 		defer database.Connection.Close()
 
-		ctx := context.Background()
 		exists, err := database.Connection.CheckIfShortIDsTableExists(ctx)
 		if err != nil {
 			panic(err)
@@ -58,6 +59,8 @@ func Run() error {
 			panic(err)
 		}
 	}
+
+	go ShortenedUrlsByIDStorage.MonitorDeleted(ctx)
 
 	return http.ListenAndServe(
 		config.Config.Address,
@@ -76,6 +79,7 @@ func Router() chi.Router {
 	r.Get("/api/user/urls", getUserShortenURLsAPIHandler)
 	r.Post("/api/shorten/batch", shortenBatchAPIHandler)
 	r.Post("/api/shorten", shortenAPIHandler)
+	r.Delete("/api/user/urls", deleteUsersShortenedURLsAPIHandler)
 
 	r.Get("/ping", pingDatabaseAPIHandler)
 	r.Post("/", shortenURLHandler)

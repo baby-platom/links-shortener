@@ -14,7 +14,7 @@ type ShortenedUrlsByIDFileStorer struct {
 	ShortenedUrlsByIDMemoryStorer
 }
 
-// CreateNewShortenedUrlsByIDJson return a new ShortenedUrlsByIDJson
+// CreateNewShortenedUrlsByIDFileStorer return a new ShortenedUrlsByIDJson
 func CreateNewShortenedUrlsByIDFileStorer(fname string) *ShortenedUrlsByIDFileStorer {
 	NewShortenedUrlsByIDJSON := &ShortenedUrlsByIDFileStorer{*CreateNewShortenedUrlsByIDMemoryStorer()}
 	err := NewShortenedUrlsByIDJSON.LoadJSON(fname)
@@ -57,6 +57,14 @@ func (s *ShortenedUrlsByIDFileStorer) Save(ctx context.Context, id string, url s
 
 func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
 	s.ShortenedUrlsByIDMemoryStorer.BatchSave(ctx, shortenedUrlsByIds, userID)
+	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ShortenedUrlsByIDFileStorer) BacthDelete(ctx context.Context, data []deleteData) error {
+	s.ShortenedUrlsByIDMemoryStorer.BacthDelete(ctx, data)
 	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
 		return err
 	}

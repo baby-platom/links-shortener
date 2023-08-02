@@ -121,7 +121,7 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	userID := auth.GetUserIDForHandler(w, r)
 
-	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsList(
+	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsListResponse(
 		r.Context(), config.Config.BaseAddress, userID,
 	)
 	if err != nil {
@@ -151,4 +151,55 @@ func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Warnf("User '%s' has no shortened URLs", userID)
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func deleteUsersShortenedURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	var req models.BatchDeleteRequest
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		logger.Log.Error("Cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if len(req) == 0 {
+		http.Error(w, "No data passed in request", http.StatusBadRequest)
+		return
+	}
+
+	userID := auth.GetUserIDForHandler(w, r)
+	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsList(r.Context(), userID)
+	if err != nil {
+		logger.Log.Error("Error occured while getting userShortenURLsList", zap.Error(err))
+		http.Error(w, "Error occured while getting userShortenURLsList", http.StatusInternalServerError)
+		return
+	}
+
+	logger.Log.Info(req)
+	logger.Log.Info(userShortenURLsList)
+
+	var notUsersURLs bool
+	for _, shortURL := range req {
+		found := false
+		for _, userShortenURL := range userShortenURLsList {
+			if userShortenURL == shortURL {
+				found = true
+			}
+		}
+
+		if !found {
+			notUsersURLs = true
+			break
+		}
+	}
+
+	if notUsersURLs {
+		logger.Log.Error("Not all pased ShortenedURLs belongs to user")
+		http.Error(w, "Not all pased ShortenedURLs belongs to user", http.StatusForbidden)
+		return
+	}
+
+	ShortenedUrlsByIDStorage.Delete(r.Context(), req, userID)
+	w.WriteHeader(http.StatusAccepted)
 }

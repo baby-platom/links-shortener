@@ -24,8 +24,11 @@ type BatchPortionShortenResponse struct {
 	OriginalURL   string `json:"-"`
 }
 
-// UserShortenURLsList - outbound data
+// UserShortenURLsListResponse - outbound data
 type UserShortenURLsListResponse struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
+
+// BatchDeleteRequest - inbound data
+type BatchDeleteRequest []string

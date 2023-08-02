@@ -23,8 +23,8 @@ func (s *ShortenedUrlsByIDDBStorer) Save(ctx context.Context, id string, url str
 }
 
 // Get returns url by id
-func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string, bool) {
-	url, err := database.Connection.GetInitialURLByID(ctx, id)
+func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string, bool, bool) {
+	url, deleted, err := database.Connection.GetInitialURLByID(ctx, id)
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +33,7 @@ func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string,
 	if url == "" {
 		ok = false
 	}
-	return url, ok
+	return url, ok, deleted
 }
 
 func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
@@ -47,6 +47,18 @@ func (s *ShortenedUrlsByIDDBStorer) GetIDByURL(ctx context.Context, initialURL s
 	return database.Connection.GetIDByInitialURL(ctx, initialURL)
 }
 
-func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
-	return database.Connection.GetUserShortenURLsList(ctx, baseAddress, userID)
+func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
+	return database.Connection.GetUserShortenURLsListResponse(ctx, baseAddress, userID)
+}
+
+func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind int) ([]string, error) {
+	return database.Connection.GetUserShortenURLsList(ctx, userIDToFind)
+}
+
+func (s *ShortenedUrlsByIDDBStorer) BacthDelete(ctx context.Context, data []deleteData) error {
+	var ids []string
+	for _, piece := range data {
+		ids = append(ids, piece.ids...)
+	}
+	return database.Connection.BatchDelete(ctx, ids)
 }

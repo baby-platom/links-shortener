@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -24,7 +25,7 @@ func (db *DB) CreateShortIDsTable(ctx context.Context) error {
 
 	_, err = tx.ExecContext(
 		ctx,
-		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT, "user_id" INT);`,
+		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT, "user_id" INT, "deleted" BOOLEAN DEFAULT FALSE);`,
 	)
 	if err != nil {
 		return err
@@ -71,18 +72,21 @@ func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string, user
 	return err
 }
 
-func (db *DB) GetInitialURLByID(ctx context.Context, id string) (string, error) {
+func (db *DB) GetInitialURLByID(ctx context.Context, id string) (string, bool, error) {
 	row := db.connection.QueryRowContext(
 		ctx,
-		"SELECT url FROM short_ids WHERE id=$1",
+		"SELECT url, deleted FROM short_ids WHERE id=$1",
 		id,
 	)
-	var url string
-	err := row.Scan(&url)
+	var (
+		url     string
+		deleted bool
+	)
+	err := row.Scan(&url, &deleted)
 	if err == sql.ErrNoRows {
 		err = nil
 	}
-	return url, err
+	return url, deleted, err
 }
 
 func (db *DB) GetIDByInitialURL(ctx context.Context, url string) (string, error) {
@@ -124,7 +128,7 @@ func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds [
 	return tx.Commit()
 }
 
-func (db *DB) GetUserShortenURLsList(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
+func (db *DB) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
 	result := make([]models.UserShortenURLsListResponse, 0)
 	rows, err := db.connection.QueryContext(
 		ctx,
@@ -153,4 +157,47 @@ func (db *DB) GetUserShortenURLsList(ctx context.Context, baseAddress string, us
 		return result, err
 	}
 	return result, nil
+}
+
+func (db *DB) GetUserShortenURLsList(ctx context.Context, userID int) ([]string, error) {
+	result := make([]string, 0)
+	rows, err := db.connection.QueryContext(
+		ctx,
+		"SELECT id FROM short_ids WHERE user_id=$1;",
+		userID,
+	)
+	if err != nil {
+		return result, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var piece string
+		err = rows.Scan(&piece)
+		if err != nil {
+			return result, err
+		}
+
+		result = append(result, piece)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func (db *DB) BatchDelete(ctx context.Context, ids []string) error {
+	values := strings.Join(ids, ",")
+	deleteTemplate := `UPDATE short_ids SET deleted=TRUE WHERE id IN ` +
+		fmt.Sprintf("(%s)", values) + ";"
+
+	_, err := db.connection.ExecContext(
+		ctx,
+		deleteTemplate,
+	)
+
+	return err
 }

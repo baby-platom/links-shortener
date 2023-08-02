@@ -55,10 +55,17 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 func restoreURLHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	url, ok := ShortenedUrlsByIDStorage.Get(r.Context(), id)
+	url, ok, deleted := ShortenedUrlsByIDStorage.Get(r.Context(), id)
+
 	if !ok {
 		http.Error(w, "Nonexistent Id", http.StatusBadRequest)
 		return
 	}
+
+	if deleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }

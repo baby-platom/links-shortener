@@ -3,36 +3,30 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"math"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/logger"
+	"github.com/baby-platom/links-shortener/internal/shortid"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 type claims struct {
 	jwt.RegisteredClaims
-	UserID int
+	UserID string
 }
-
-var r = rand.New(rand.NewSource(time.Now().Unix()))
-var limit = int(math.Pow(2, 20))
 
 // BuildJWTString - creates and return a string representation of JWT token
 func BuildJWTString() (string, error) {
-	UserID := r.Intn(limit)
-
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		claims{
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.Config.AuthTTL)),
 			},
-			UserID: UserID,
+			UserID: shortid.GenerateShortID(),
 		},
 	)
 
@@ -44,7 +38,7 @@ func BuildJWTString() (string, error) {
 	return tokenString, nil
 }
 
-func GetUserID(tokenString string) (int, error) {
+func GetUserID(tokenString string) (string, error) {
 	claims := &claims{}
 	token, err := jwt.ParseWithClaims(
 		tokenString,
@@ -58,19 +52,19 @@ func GetUserID(tokenString string) (int, error) {
 	)
 
 	if err != nil {
-		return 0, fmt.Errorf("error occured while parsing JWT token: %w", err)
+		return "", fmt.Errorf("error occured while parsing JWT token: %w", err)
 	}
 
 	if !token.Valid {
 		logger.Log.Warn("Token is not valid")
-		return 0, errors.New("token is not valid")
+		return "", errors.New("token is not valid")
 	}
 
 	logger.Log.Info("Token is valid")
 	return claims.UserID, nil
 }
 
-func GetUserIDForHandler(w http.ResponseWriter, r *http.Request) int {
+func GetUserIDForHandler(w http.ResponseWriter, r *http.Request) string {
 	var authToken string
 	authCookie, err := r.Cookie("auth")
 	if err == http.ErrNoCookie {

@@ -50,12 +50,12 @@ func (s *ShortenedUrlsByIDFileStorer) LoadJSON(fname string) error {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDFileStorer) Save(ctx context.Context, id string, url string, userID int) error {
+func (s *ShortenedUrlsByIDFileStorer) Save(ctx context.Context, id string, url string, userID string) error {
 	s.ShortenedUrlsByIDMemoryStorer.Save(ctx, id, url, userID)
 	return s.SaveJSON(config.Config.FileStoragePath)
 }
 
-func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
+func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID string) error {
 	s.ShortenedUrlsByIDMemoryStorer.BatchSave(ctx, shortenedUrlsByIds, userID)
 	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
 		return err

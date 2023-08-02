@@ -18,7 +18,7 @@ func CreateNewShortenedUrlsByIDDBStorer() *ShortenedUrlsByIDDBStorer {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDDBStorer) Save(ctx context.Context, id string, url string, userID int) error {
+func (s *ShortenedUrlsByIDDBStorer) Save(ctx context.Context, id string, url string, userID string) error {
 	return database.Connection.WriteShortenedURL(ctx, id, url, userID)
 }
 
@@ -36,7 +36,7 @@ func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string,
 	return url, ok, deleted
 }
 
-func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
+func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID string) error {
 	if err := database.Connection.WriteBatchOfShortenedURL(ctx, shortenedUrlsByIds, userID); err != nil {
 		return err
 	}
@@ -47,11 +47,11 @@ func (s *ShortenedUrlsByIDDBStorer) GetIDByURL(ctx context.Context, initialURL s
 	return database.Connection.GetIDByInitialURL(ctx, initialURL)
 }
 
-func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
+func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID string) ([]models.UserShortenURLsListResponse, error) {
 	return database.Connection.GetUserShortenURLsListResponse(ctx, baseAddress, userID)
 }
 
-func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind int) ([]string, error) {
+func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind string) ([]string, error) {
 	return database.Connection.GetUserShortenURLsList(ctx, userIDToFind)
 }
 

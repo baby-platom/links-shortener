@@ -25,7 +25,7 @@ func (db *DB) CreateShortIDsTable(ctx context.Context) error {
 
 	_, err = tx.ExecContext(
 		ctx,
-		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT, "user_id" INT, "deleted" BOOLEAN DEFAULT FALSE);`,
+		`CREATE TABLE short_ids("id" TEXT PRIMARY KEY, "url" TEXT, "user_id" TEXT, "deleted" BOOLEAN DEFAULT FALSE);`,
 	)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (db *DB) CheckIfShortIDsTableExists(ctx context.Context) (bool, error) {
 	return exists, err
 }
 
-func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string, userID int) error {
+func (db *DB) WriteShortenedURL(ctx context.Context, id string, url string, userID string) error {
 	_, err := db.connection.ExecContext(
 		ctx,
 		insertTemplate,
@@ -103,7 +103,7 @@ func (db *DB) GetIDByInitialURL(ctx context.Context, url string) (string, error)
 	return id, err
 }
 
-func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
+func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID string) error {
 	tx, err := db.connection.Begin()
 	if err != nil {
 		return err
@@ -128,7 +128,7 @@ func (db *DB) WriteBatchOfShortenedURL(ctx context.Context, shortenedUrlsByIds [
 	return tx.Commit()
 }
 
-func (db *DB) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID int) ([]models.UserShortenURLsListResponse, error) {
+func (db *DB) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID string) ([]models.UserShortenURLsListResponse, error) {
 	result := make([]models.UserShortenURLsListResponse, 0)
 	rows, err := db.connection.QueryContext(
 		ctx,
@@ -159,7 +159,7 @@ func (db *DB) GetUserShortenURLsListResponse(ctx context.Context, baseAddress st
 	return result, nil
 }
 
-func (db *DB) GetUserShortenURLsList(ctx context.Context, userID int) ([]string, error) {
+func (db *DB) GetUserShortenURLsList(ctx context.Context, userID string) ([]string, error) {
 	result := make([]string, 0)
 	rows, err := db.connection.QueryContext(
 		ctx,

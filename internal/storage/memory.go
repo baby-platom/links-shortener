@@ -17,7 +17,7 @@ type Data struct {
 // ShortenedUrlsByIDMemoryStorer implements ShortenedUrlsByIDStorer interface using temproray memory.
 type ShortenedUrlsByIDMemoryStorer struct {
 	Data               map[string]Data
-	UsersShortenedURLs map[int][]string
+	UsersShortenedURLs map[string][]string
 	deleteCh           chan deleteData
 }
 
@@ -25,13 +25,13 @@ type ShortenedUrlsByIDMemoryStorer struct {
 func CreateNewShortenedUrlsByIDMemoryStorer() *ShortenedUrlsByIDMemoryStorer {
 	return &ShortenedUrlsByIDMemoryStorer{
 		Data:               make(map[string]Data),
-		UsersShortenedURLs: make(map[int][]string),
+		UsersShortenedURLs: make(map[string][]string),
 		deleteCh:           make(chan deleteData, 32),
 	}
 }
 
 // Save creates new id:url relation
-func (s *ShortenedUrlsByIDMemoryStorer) Save(ctx context.Context, id string, url string, userID int) error {
+func (s *ShortenedUrlsByIDMemoryStorer) Save(ctx context.Context, id string, url string, userID string) error {
 	s.Data[id] = Data{initialURL: url, deleted: false}
 	s.UsersShortenedURLs[userID] = append(s.UsersShortenedURLs[userID], id)
 	return nil
@@ -43,7 +43,7 @@ func (s *ShortenedUrlsByIDMemoryStorer) Get(ctx context.Context, id string) (str
 	return data.initialURL, ok, data.deleted
 }
 
-func (s *ShortenedUrlsByIDMemoryStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID int) error {
+func (s *ShortenedUrlsByIDMemoryStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID string) error {
 	for _, portion := range shortenedUrlsByIds {
 		s.Data[portion.ID] = Data{initialURL: portion.OriginalURL, deleted: false}
 		s.UsersShortenedURLs[userID] = append(s.UsersShortenedURLs[userID], portion.ID)
@@ -60,7 +60,7 @@ func (s *ShortenedUrlsByIDMemoryStorer) GetIDByURL(ctx context.Context, initialU
 	return "", nil
 }
 
-func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userIDToFind int) ([]models.UserShortenURLsListResponse, error) {
+func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userIDToFind string) ([]models.UserShortenURLsListResponse, error) {
 	result := make([]models.UserShortenURLsListResponse, 0)
 
 	shortURLs, ok := s.UsersShortenedURLs[userIDToFind]
@@ -80,7 +80,7 @@ func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsListResponse(ctx conte
 	return result, nil
 }
 
-func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind int) ([]string, error) {
+func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind string) ([]string, error) {
 	shortURLs, _ := s.UsersShortenedURLs[userIDToFind]
 	return shortURLs, nil
 }
@@ -138,7 +138,7 @@ func (s *ShortenedUrlsByIDMemoryStorer) MonitorDeleted(ctx context.Context) {
 	}
 }
 
-func (s *ShortenedUrlsByIDMemoryStorer) Delete(ctx context.Context, ids []string, userID int) {
+func (s *ShortenedUrlsByIDMemoryStorer) Delete(ctx context.Context, ids []string, userID string) {
 	data := deleteData{
 		ids:    ids,
 		userID: userID,

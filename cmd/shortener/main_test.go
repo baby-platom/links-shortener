@@ -25,7 +25,7 @@ import (
 
 const defaultContentType = "text/plain"
 const testingURL = "https://music.yandex.kz/home"
-const userID int = 1
+const userID string = "random"
 
 var ts = httptest.NewServer(app.Router())
 var ctx = context.Background()

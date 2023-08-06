@@ -22,7 +22,7 @@ func MonitorDeleted(ctx context.Context, s ShortenedUrlsByIDStorer) {
 				continue
 			}
 
-			err := s.BacthDelete(ctx, toDelete)
+			err := s.BatchDelete(ctx, toDelete)
 			if err != nil {
 				logger.Log.Errorf("error occurred while deleting batch of shortened urls: %v", err)
 			}

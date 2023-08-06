@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/logger"
@@ -23,10 +22,8 @@ func BuildJWTString() (string, error) {
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		claims{
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.Config.AuthTTL)),
-			},
-			UserID: shortid.GenerateShortID(),
+			RegisteredClaims: jwt.RegisteredClaims{},
+			UserID:           shortid.GenerateShortID(),
 		},
 	)
 
@@ -64,12 +61,11 @@ func GetUserID(tokenString string) (string, error) {
 	return claims.UserID, nil
 }
 
-func GetUserIDForHandler(w http.ResponseWriter, r *http.Request) string {
+func GetUserIDForHandler(r *http.Request, setCookieHeader string) string {
 	var authToken string
 	authCookie, err := r.Cookie("auth")
 	if err == http.ErrNoCookie {
-		data := w.Header().Get("Set-Cookie")
-		data = strings.Split(data, ";")[0]
+		data := strings.Split(setCookieHeader, ";")[0]
 		authToken = strings.Split(data, "=")[1]
 	} else {
 		authToken = authCookie.Value

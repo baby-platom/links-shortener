@@ -3,7 +3,6 @@ package auth
 import (
 	"net/http"
 
-	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/logger"
 )
 
@@ -42,10 +41,9 @@ func Middleware(h http.Handler) http.Handler {
 			newAuthToken, err := BuildJWTString()
 			if err == nil {
 				cookie := &http.Cookie{
-					Name:   "auth",
-					Value:  newAuthToken,
-					MaxAge: int(config.Config.AuthTTL.Seconds()),
-					Path:   "/",
+					Name:  "auth",
+					Value: newAuthToken,
+					Path:  "/",
 				}
 				http.SetCookie(w, cookie)
 			} else {

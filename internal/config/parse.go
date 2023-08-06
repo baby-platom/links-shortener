@@ -3,8 +3,6 @@ package config
 import (
 	"flag"
 	"os"
-	"strconv"
-	"time"
 )
 
 // Config includes variables parsed from flags
@@ -15,7 +13,6 @@ var Config struct {
 	FileStoragePath string
 	DatabaseDSN     string
 	AuthSecretKey   string
-	AuthTTL         time.Duration
 }
 
 // ParseFlags parses flags into the Config
@@ -46,13 +43,5 @@ func ParseFlags() {
 	Config.AuthSecretKey = "unsecureSecretKey"
 	if authSecretKey := os.Getenv("AUTH_SECRET_KEY"); authSecretKey != "" {
 		Config.AuthSecretKey = authSecretKey
-	}
-	Config.AuthTTL = time.Hour * 3
-	if authTTL := os.Getenv("AUTH_TTL"); authTTL != "" {
-		hours, err := strconv.Atoi(authTTL)
-		if err != nil {
-			panic(err)
-		}
-		Config.AuthTTL = time.Hour * time.Duration(hours)
 	}
 }

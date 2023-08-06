@@ -63,8 +63,8 @@ func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUr
 	return nil
 }
 
-func (s *ShortenedUrlsByIDFileStorer) BacthDelete(ctx context.Context, data []deleteData) error {
-	s.ShortenedUrlsByIDMemoryStorer.BacthDelete(ctx, data)
+func (s *ShortenedUrlsByIDFileStorer) BatchDelete(ctx context.Context, data []deleteData) error {
+	s.ShortenedUrlsByIDMemoryStorer.BatchDelete(ctx, data)
 	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
 		return err
 	}

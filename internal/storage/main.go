@@ -19,7 +19,7 @@ type ShortenedUrlsByIDStorer interface {
 	GetIDByURL(ctx context.Context, url string) (string, error)
 	GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userIDToFind string) ([]models.UserShortenURLsListResponse, error)
 	GetUserShortenURLsList(ctx context.Context, userIDToFind string) ([]string, error)
-	BacthDelete(ctx context.Context, data []deleteData) error
+	BatchDelete(ctx context.Context, data []deleteData) error
 	Delete(ctx context.Context, ids []string, userID string)
 	GetDeleteCh() chan deleteData
 }

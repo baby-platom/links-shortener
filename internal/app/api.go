@@ -29,7 +29,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := auth.GetUserIDForHandler(w, r)
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
 
 	var id = shortid.GenerateShortID()
 	var status = http.StatusCreated
@@ -97,7 +97,7 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 		shortenedUrlsByIds = append(shortenedUrlsByIds, b)
 	}
 
-	userID := auth.GetUserIDForHandler(w, r)
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
 
 	err := ShortenedUrlsByIDStorage.BatchSave(r.Context(), shortenedUrlsByIds, userID)
 	if err != nil {
@@ -119,7 +119,7 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
-	userID := auth.GetUserIDForHandler(w, r)
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
 
 	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsListResponse(
 		r.Context(), config.Config.BaseAddress, userID,
@@ -168,7 +168,7 @@ func deleteUsersShortenedURLsAPIHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userID := auth.GetUserIDForHandler(w, r)
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
 	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsList(r.Context(), userID)
 	if err != nil {
 		logger.Log.Error("Error occured while getting userShortenURLsList", zap.Error(err))
@@ -179,22 +179,17 @@ func deleteUsersShortenedURLsAPIHandler(w http.ResponseWriter, r *http.Request) 
 	logger.Log.Info(req)
 	logger.Log.Info(userShortenURLsList)
 
-	var notUsersURLs bool
+	checkset := make(map[string]bool)
 	for _, shortURL := range req {
-		found := false
-		for _, userShortenURL := range userShortenURLsList {
-			if userShortenURL == shortURL {
-				found = true
-			}
-		}
-
-		if !found {
-			notUsersURLs = true
-			break
+		checkset[shortURL] = true
+	}
+	for _, userShortenURL := range userShortenURLsList {
+		if checkset[userShortenURL] {
+			delete(checkset, userShortenURL)
 		}
 	}
 
-	if notUsersURLs {
+	if len(checkset) != 0 {
 		logger.Log.Error("Not all pased ShortenedURLs belongs to user")
 		http.Error(w, "Not all pased ShortenedURLs belongs to user", http.StatusForbidden)
 		return

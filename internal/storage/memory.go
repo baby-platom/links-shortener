@@ -87,7 +87,7 @@ func (s *ShortenedUrlsByIDMemoryStorer) GetUserShortenURLsList(ctx context.Conte
 	return shortURLs, nil
 }
 
-func (s *ShortenedUrlsByIDMemoryStorer) BacthDelete(ctx context.Context, data []deleteData) error {
+func (s *ShortenedUrlsByIDMemoryStorer) BatchDelete(ctx context.Context, data []deleteData) error {
 	for _, piece := range data {
 		var urlsToDelete []string
 		for _, id := range piece.ids {

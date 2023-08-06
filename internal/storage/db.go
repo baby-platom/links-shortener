@@ -56,7 +56,7 @@ func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, 
 	return database.Connection.GetUserShortenURLsList(ctx, userIDToFind)
 }
 
-func (s *ShortenedUrlsByIDDBStorer) BacthDelete(ctx context.Context, data []deleteData) error {
+func (s *ShortenedUrlsByIDDBStorer) BatchDelete(ctx context.Context, data []deleteData) error {
 	var ids []string
 	for _, piece := range data {
 		ids = append(ids, piece.ids...)

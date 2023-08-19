@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/baby-platom/links-shortener/internal/auth"
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/database"
 	"github.com/baby-platom/links-shortener/internal/logger"
@@ -27,8 +28,10 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
+
 	id := shortid.GenerateShortID()
-	err = ShortenedUrlsByIDStorage.Save(r.Context(), id, initialURL)
+	err = ShortenedUrlsByIDStorage.Save(r.Context(), id, initialURL, userID)
 	if err != nil && errors.Is(err, database.ErrConflict) {
 		logger.Log.Error("Cannot shorten url", zap.Error(err))
 		id, err := ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), initialURL)
@@ -52,10 +55,17 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 
 func restoreURLHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	url, ok := ShortenedUrlsByIDStorage.Get(r.Context(), id)
+	url, ok, deleted := ShortenedUrlsByIDStorage.Get(r.Context(), id)
+
 	if !ok {
 		http.Error(w, "Nonexistent Id", http.StatusBadRequest)
 		return
 	}
+
+	if deleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }

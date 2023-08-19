@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/baby-platom/links-shortener/internal/database"
+	"github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 )
 
@@ -18,13 +19,13 @@ func CreateNewShortenedUrlsByIDDBStorer() *ShortenedUrlsByIDDBStorer {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDDBStorer) Save(ctx context.Context, id string, url string) error {
-	return database.Connection.WriteShortenedURL(ctx, id, url)
+func (s *ShortenedUrlsByIDDBStorer) Save(ctx context.Context, id string, url string, userID string) error {
+	return database.Connection.WriteShortenedURL(ctx, id, url, userID)
 }
 
 // Get returns url by id
-func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string, bool) {
-	url, err := database.Connection.GetInitialURLByID(ctx, id)
+func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string, bool, bool) {
+	url, deleted, err := database.Connection.GetInitialURLByID(ctx, id)
 	if err != nil {
 		panic(err)
 	}
@@ -33,11 +34,11 @@ func (s *ShortenedUrlsByIDDBStorer) Get(ctx context.Context, id string) (string,
 	if url == "" {
 		ok = false
 	}
-	return url, ok
+	return url, ok, deleted
 }
 
-func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
-	if err := database.Connection.WriteBatchOfShortenedURL(ctx, shortenedUrlsByIds); err != nil {
+func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID string) error {
+	if err := database.Connection.WriteBatchOfShortenedURL(ctx, shortenedUrlsByIds, userID); err != nil {
 		return err
 	}
 	return nil
@@ -45,4 +46,21 @@ func (s *ShortenedUrlsByIDDBStorer) BatchSave(ctx context.Context, shortenedUrls
 
 func (s *ShortenedUrlsByIDDBStorer) GetIDByURL(ctx context.Context, initialURL string) (string, error) {
 	return database.Connection.GetIDByInitialURL(ctx, initialURL)
+}
+
+func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsListResponse(ctx context.Context, baseAddress string, userID string) ([]models.UserShortenURLsListResponse, error) {
+	return database.Connection.GetUserShortenURLsListResponse(ctx, baseAddress, userID)
+}
+
+func (s *ShortenedUrlsByIDDBStorer) GetUserShortenURLsList(ctx context.Context, userIDToFind string) ([]string, error) {
+	return database.Connection.GetUserShortenURLsList(ctx, userIDToFind)
+}
+
+func (s *ShortenedUrlsByIDDBStorer) BatchDelete(ctx context.Context, data []deleteData) error {
+	var ids []string
+	for _, piece := range data {
+		ids = append(ids, piece.ids...)
+	}
+	logger.Log.Infoln(ids)
+	return database.Connection.BatchDelete(ctx, ids)
 }

@@ -11,7 +11,8 @@ var Config struct {
 	BaseAddress     string
 	LogLevel        string
 	FileStoragePath string
-	DatabaseDSN string
+	DatabaseDSN     string
+	AuthSecretKey   string
 }
 
 // ParseFlags parses flags into the Config
@@ -37,5 +38,10 @@ func ParseFlags() {
 	}
 	if databaseDSN := os.Getenv("DATABASE_DSN"); databaseDSN != "" {
 		Config.DatabaseDSN = databaseDSN
+	}
+
+	Config.AuthSecretKey = "unsecureSecretKey"
+	if authSecretKey := os.Getenv("AUTH_SECRET_KEY"); authSecretKey != "" {
+		Config.AuthSecretKey = authSecretKey
 	}
 }

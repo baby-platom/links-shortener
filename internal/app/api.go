@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/baby-platom/links-shortener/internal/auth"
 	"github.com/baby-platom/links-shortener/internal/config"
 	"github.com/baby-platom/links-shortener/internal/database"
 	"github.com/baby-platom/links-shortener/internal/logger"
@@ -28,9 +29,11 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
+
 	var id = shortid.GenerateShortID()
 	var status = http.StatusCreated
-	err := ShortenedUrlsByIDStorage.Save(r.Context(), id, req.URL)
+	err := ShortenedUrlsByIDStorage.Save(r.Context(), id, req.URL, userID)
 	if err != nil && errors.Is(err, database.ErrConflict) {
 		logger.Log.Error("Cannot shorten url", zap.Error(err))
 		id, err = ShortenedUrlsByIDStorage.GetIDByURL(r.Context(), req.URL)
@@ -43,7 +46,7 @@ func shortenAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if status == http.StatusCreated {
-		logger.Log.Infof("Shortened '%s' to '%s'\n", req.URL, id)
+		logger.Log.Infof("Shortened '%s' to '%s'", req.URL, id)
 	}
 
 	resp := models.ShortenResponse{
@@ -94,7 +97,9 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 		shortenedUrlsByIds = append(shortenedUrlsByIds, b)
 	}
 
-	err := ShortenedUrlsByIDStorage.BatchSave(r.Context(), shortenedUrlsByIds)
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
+
+	err := ShortenedUrlsByIDStorage.BatchSave(r.Context(), shortenedUrlsByIds, userID)
 	if err != nil {
 		logger.Log.Error("Error saving shortened urls", zap.Error(err))
 		http.Error(w, "Error saving shortened urls", http.StatusInternalServerError)
@@ -111,4 +116,85 @@ func shortenBatchAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(data)
+}
+
+func getUserShortenURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
+
+	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsListResponse(
+		r.Context(), config.Config.BaseAddress, userID,
+	)
+	if err != nil {
+		logger.Log.Error("Error occured while getting userShortenURLsList", zap.Error(err))
+		http.Error(w, "Error occured while getting userShortenURLsList", http.StatusInternalServerError)
+		return
+	}
+
+	var noToken bool
+	if w.Header().Get("No-Token-Passed") != "" {
+		noToken = true
+	}
+
+	if noToken {
+		logger.Log.Warn("Passed JWT token is invalid")
+		w.WriteHeader(http.StatusUnauthorized)
+	} else if len(userShortenURLsList) > 0 {
+		data, err := json.Marshal(userShortenURLsList)
+		if err != nil {
+			logger.Log.Error("Error encoding response", zap.Error(err))
+			http.Error(w, "Error encoding response", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	} else {
+		logger.Log.Warnf("User '%s' has no shortened URLs", userID)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func deleteUsersShortenedURLsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	var req models.BatchDeleteRequest
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		logger.Log.Error("Cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if len(req) == 0 {
+		http.Error(w, "No data passed in request", http.StatusBadRequest)
+		return
+	}
+
+	userID := auth.GetUserIDForHandler(r, w.Header().Get("Set-Cookie"))
+	userShortenURLsList, err := ShortenedUrlsByIDStorage.GetUserShortenURLsList(r.Context(), userID)
+	if err != nil {
+		logger.Log.Error("Error occured while getting userShortenURLsList", zap.Error(err))
+		http.Error(w, "Error occured while getting userShortenURLsList", http.StatusInternalServerError)
+		return
+	}
+
+	logger.Log.Info(req)
+	logger.Log.Info(userShortenURLsList)
+
+	checkset := make(map[string]bool)
+	for _, shortURL := range req {
+		checkset[shortURL] = true
+	}
+	for _, userShortenURL := range userShortenURLsList {
+		if checkset[userShortenURL] {
+			delete(checkset, userShortenURL)
+		}
+	}
+
+	if len(checkset) != 0 {
+		logger.Log.Error("Not all pased ShortenedURLs belongs to user")
+		http.Error(w, "Not all pased ShortenedURLs belongs to user", http.StatusForbidden)
+		return
+	}
+
+	ShortenedUrlsByIDStorage.Delete(r.Context(), req, userID)
+	w.WriteHeader(http.StatusAccepted)
 }

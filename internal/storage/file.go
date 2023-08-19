@@ -14,7 +14,7 @@ type ShortenedUrlsByIDFileStorer struct {
 	ShortenedUrlsByIDMemoryStorer
 }
 
-// CreateNewShortenedUrlsByIDJson return a new ShortenedUrlsByIDJson
+// CreateNewShortenedUrlsByIDFileStorer return a new ShortenedUrlsByIDJson
 func CreateNewShortenedUrlsByIDFileStorer(fname string) *ShortenedUrlsByIDFileStorer {
 	NewShortenedUrlsByIDJSON := &ShortenedUrlsByIDFileStorer{*CreateNewShortenedUrlsByIDMemoryStorer()}
 	err := NewShortenedUrlsByIDJSON.LoadJSON(fname)
@@ -50,15 +50,21 @@ func (s *ShortenedUrlsByIDFileStorer) LoadJSON(fname string) error {
 }
 
 // Save creates new id:url relation and saves it to the json file
-func (s *ShortenedUrlsByIDFileStorer) Save(ctx context.Context, id string, url string) error {
-	s.Data[id] = url
+func (s *ShortenedUrlsByIDFileStorer) Save(ctx context.Context, id string, url string, userID string) error {
+	s.ShortenedUrlsByIDMemoryStorer.Save(ctx, id, url, userID)
 	return s.SaveJSON(config.Config.FileStoragePath)
 }
 
-func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse) error {
-	for _, portion := range shortenedUrlsByIds {
-		s.Data[portion.ID] = portion.OriginalURL
+func (s *ShortenedUrlsByIDFileStorer) BatchSave(ctx context.Context, shortenedUrlsByIds []models.BatchPortionShortenResponse, userID string) error {
+	s.ShortenedUrlsByIDMemoryStorer.BatchSave(ctx, shortenedUrlsByIds, userID)
+	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
+		return err
 	}
+	return nil
+}
+
+func (s *ShortenedUrlsByIDFileStorer) BatchDelete(ctx context.Context, data []deleteData) error {
+	s.ShortenedUrlsByIDMemoryStorer.BatchDelete(ctx, data)
 	if err := s.SaveJSON(config.Config.FileStoragePath); err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+
 	"fmt"
 	"io"
 	"net/http"
@@ -15,15 +16,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/baby-platom/links-shortener/internal/app"
+	"github.com/baby-platom/links-shortener/internal/config"
+
+	// "github.com/baby-platom/links-shortener/internal/logger"
 	"github.com/baby-platom/links-shortener/internal/models"
 	"github.com/baby-platom/links-shortener/internal/storage"
 )
 
 const defaultContentType = "text/plain"
 const testingURL = "https://music.yandex.kz/home"
+const userID string = "random"
 
 var ts = httptest.NewServer(app.Router())
 var ctx = context.Background()
+var flagsParsed bool
 
 type header struct {
 	name  string
@@ -50,6 +56,7 @@ type test struct {
 
 func init() {
 	app.ShortenedUrlsByIDStorage = storage.CreateNewShortenedUrlsByIDMemoryStorer()
+	// logger.Initialize(config.Config.LogLevel)
 }
 
 func testRequest(
@@ -57,6 +64,11 @@ func testRequest(
 	ts *httptest.Server,
 	test test,
 ) {
+	if !flagsParsed {
+		flagsParsed = true
+		config.ParseFlags()
+	}
+
 	requestData := test.request
 	wantData := test.want
 
@@ -135,7 +147,7 @@ func TestRestoreURLHandler(t *testing.T) {
 	shortenedUrlsByID["some_id"] = testingURL
 
 	for key, value := range shortenedUrlsByID {
-		app.ShortenedUrlsByIDStorage.Save(ctx, key, value)
+		app.ShortenedUrlsByIDStorage.Save(ctx, key, value, userID)
 	}
 
 	tests := []test{
